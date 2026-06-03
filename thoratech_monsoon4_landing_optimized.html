@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ThoraTech — Monsoon 4 Jet Ventilator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0052cc;--teal-light:#0066ff;--teal-pale:#f0f5ff;--teal-mid:#b3d9ff;--teal-dark:#003d99;
+  --white:#ffffff;--off-white:#f8fafb;--paper:#f5f8fc;
+  --ink:#0d1a14;--ink-2:#2e4039;--ink-3:#5a706a;--ink-4:#9aa6b8;
+  --border:#e8ecf0;--border-strong:#c5d9ed;
+  --font-body:'DM Sans',sans-serif;--font-display:'Playfair Display',serif;
+  --shadow-sm:0 1px 4px rgba(0,82,204,0.06);
+  --shadow-md:0 4px 20px rgba(0,82,204,0.09);
+  --shadow-lg:0 16px 56px rgba(0,82,204,0.13);
+  --radius:12px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--white);color:var(--ink);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,0.96);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:0 5%;height:68px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:34px;height:34px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{fill:white;width:18px;height:18px}
+.logo-name{font-family:var(--font-display);font-size:1.3rem;font-weight:500;color:var(--teal-dark)}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a{font-size:0.85rem;font-weight:500;color:var(--ink-2);text-decoration:none;letter-spacing:0.03em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--teal)}
+.nav-cta{background:var(--teal)!important;color:white!important;padding:8px 20px;border-radius:100px;transition:background .2s!important}
+.nav-cta:hover{background:var(--teal-dark)!important}
+
+/* HERO */
+#hero{
+  min-height:100vh;padding:68px 5% 0;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4rem;
+  background:var(--white);
+  position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:radial-gradient(ellipse 70% 80% at 80% 50%,var(--teal-pale) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-content{position:relative;z-index:1;padding:5rem 0 4rem}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--teal-pale);border:1px solid var(--teal-mid);
+  padding:5px 14px;border-radius:100px;margin-bottom:1.75rem;
+}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--teal-light);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.eyebrow span{font-size:0.75rem;font-weight:600;color:var(--teal-dark);letter-spacing:.08em;text-transform:uppercase}
+h1{
+  font-family:var(--font-display);font-size:clamp(2.6rem,4.5vw,4rem);
+  font-weight:500;line-height:1.1;color:var(--ink);letter-spacing:-.02em;margin-bottom:1.25rem;
+}
+h1 em{font-style:italic;color:var(--teal)}
+.hero-sub{font-size:1rem;color:var(--ink-2);max-width:460px;line-height:1.8;font-weight:300;margin-bottom:2rem}
+.actions{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--teal);color:white;padding:13px 26px;border-radius:100px;
+  font-weight:500;font-size:.92rem;text-decoration:none;border:none;cursor:pointer;
+  transition:background .2s,transform .15s;
+}
+.btn-primary:hover{background:var(--teal-dark);transform:translateY(-1px)}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:8px;
+  background:white;color:var(--teal);padding:13px 26px;border-radius:100px;
+  font-weight:500;font-size:.92rem;text-decoration:none;
+  border:1.5px solid var(--teal);cursor:pointer;transition:all .2s;
+}
+.btn-outline:hover{background:var(--teal-pale)}
+.hero-stats{
+  display:flex;gap:2.5rem;margin-top:3rem;padding-top:2.5rem;
+  border-top:1px solid var(--border);
+}
+.stat-val{font-family:var(--font-display);font-size:2rem;font-weight:500;color:var(--teal-dark);display:block}
+.stat-lbl{font-size:0.75rem;color:var(--ink-3);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+
+/* HERO VISUAL */
+.hero-visual{
+  position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  padding:6rem 0 4rem;
+}
+.hero-img-wrap{position:relative}
+.hero-img-wrap img{
+  width:clamp(400px, 90vw, 600px);max-width:100%;
+  filter:drop-shadow(0 24px 60px rgba(0,82,204,0.16)) hue-rotate(30deg) saturate(1.2));
+  animation:float 5s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.cert-badge{
+  position:absolute;bottom:-8px;right:-20px;
+  background:white;border:1px solid var(--border);border-radius:14px;
+  padding:10px 14px;box-shadow:var(--shadow-md);
+  display:flex;align-items:center;gap:10px;
+}
+.cert-badge-icon{width:32px;height:32px;background:var(--teal-pale);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.cert-badge-icon svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2}
+.cert-badge-title{font-size:.74rem;font-weight:600;color:var(--teal-dark)}
+.cert-badge-sub{font-size:.66rem;color:var(--ink-3)}
+
+/* CERT STRIP */
+.cert-strip{
+  background:var(--teal-pale);border-top:1px solid var(--teal-mid);border-bottom:1px solid var(--teal-mid);padding:1.1rem 5%;
+  display:flex;align-items:center;gap:2.5rem;overflow:hidden;
+}
+.cert-strip-lbl{font-size:.7rem;font-weight:600;color:var(--teal-dark);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.cert-items{display:flex;gap:2.5rem;flex-wrap:wrap}
+.cert-item{font-size:.8rem;font-weight:500;color:var(--teal-dark);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.cert-dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+
+/* SECTION COMMON */
+section{padding:6rem 5%}
+.sec-label{
+  font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:.85rem;display:flex;align-items:center;gap:8px;
+}
+.sec-label::before{content:'';display:block;width:22px;height:1px;background:var(--teal)}
+h2{
+  font-family:var(--font-display);font-size:clamp(1.9rem,3vw,2.75rem);
+  font-weight:500;line-height:1.15;color:var(--ink);letter-spacing:-.02em;margin-bottom:1rem;
+}
+.sec-intro{font-size:1rem;color:var(--ink-2);max-width:520px;line-height:1.8;font-weight:300}
+
+/* USES – white theme */
+#uses{background:var(--off-white)}
+.uses-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2.75rem;flex-wrap:wrap;gap:1rem}
+.uses-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+
+/* FLIP CARDS */
+.flip-card{aspect-ratio:4/3;cursor:pointer;perspective:1200px}
+.flip-inner{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.4,.2,.2,1);
+}
+.flip-card.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{
+  position:absolute;inset:0;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;
+}
+/* FRONT */
+.flip-front{display:flex;flex-direction:column;justify-content:flex-end;background:#f0f5ff}
+.flip-front-bg{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  transition:transform .5s ease;
+}
+.flip-card:hover .flip-front-bg{transform:scale(1.04)}
+.flip-front-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,82,204,.65) 0%,rgba(0,82,204,.08) 55%,transparent 100%);
+}
+.flip-front-content{position:relative;z-index:2;padding:1.25rem 1.5rem 1.1rem}
+.flip-num{font-family:var(--font-display);font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.06em;display:block;margin-bottom:.3rem}
+.flip-front h3{font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:white;line-height:1.25;margin-bottom:.6rem}
+.flip-tag{
+  display:inline-block;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:white;
+  font-size:.62rem;font-weight:700;padding:3px 10px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase;
+}
+.flip-hint{
+  position:absolute;top:12px;right:12px;z-index:3;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;transition:background .2s;
+}
+.flip-card:hover .flip-hint{background:rgba(0,82,204,.25)}
+.flip-hint svg{width:11px;height:11px;stroke:white;fill:none;stroke-width:2}
+/* BACK – clean white */
+.flip-back{
+  transform:rotateY(180deg);
+  background:white;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:2rem 1.75rem;
+  border:1px solid var(--border);
+}
+.flip-back-num{
+  font-family:var(--font-display);font-size:3rem;font-weight:500;
+  color:#e8f0ff;line-height:1;margin-bottom:.5rem;
+}
+.flip-back h3{font-family:var(--font-display);font-size:1.05rem;font-weight:500;color:var(--ink);margin-bottom:.85rem;line-height:1.3}
+.flip-back p{font-size:.87rem;color:var(--ink-2);line-height:1.75;margin-bottom:1.1rem}
+.flip-back-tag{
+  display:inline-block;background:var(--teal-pale);color:var(--teal-dark);
+  font-size:.62rem;font-weight:700;padding:4px 12px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase;
+}
+.flip-close{
+  position:absolute;top:12px;right:12px;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--paper);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .2s;
+}
+.flip-close:hover{background:var(--teal-pale)}
+.flip-close svg{width:11px;height:11px;stroke:var(--ink-3);fill:none;stroke-width:2.5}
+
+/* 3D VIEWER */
+#viewer{background:var(--white);display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:5rem}
+.vspecs{margin-top:2.25rem;display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.vspec{
+  background:var(--off-white);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.1rem;
+}
+.vspec-val{font-family:var(--font-display);font-size:1.5rem;color:var(--teal-dark)}
+.vspec-lbl{font-size:.75rem;color:var(--ink-3);margin-top:2px}
+.viewer-stage{
+  position:relative;display:flex;flex-direction:column;
+  align-items:center;gap:1.25rem;
+}
+.viewer-img{
+  width:100%;max-width:520px;border-radius:16px;
+  box-shadow:var(--shadow-lg);transition:opacity .3s,transform .3s;
+  cursor:pointer;
+}
+.viewer-btns{display:flex;gap:10px}
+.vbtn{
+  padding:8px 18px;border-radius:100px;font-size:.78rem;font-weight:500;cursor:pointer;
+  border:1.5px solid var(--border);background:white;color:var(--ink-2);
+  transition:all .2s;font-family:var(--font-body);
+}
+.vbtn.active,.vbtn:hover{background:var(--teal-pale);border-color:var(--teal-mid);color:var(--teal-dark)}
+
+/* VIDEO */
+#video{background:var(--paper)}
+.video-layout{display:grid;grid-template-columns:1fr 1.5fr;gap:5rem;align-items:center}
+.video-player{
+  position:relative;border-radius:20px;overflow:hidden;
+  aspect-ratio:4/3;box-shadow:var(--shadow-lg);
+}
+.video-player img{width:100%;height:100%;object-fit:cover}
+.video-overlay{
+  position:absolute;inset:0;background:rgba(8,40,28,.4);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+}
+.play-btn{
+  width:68px;height:68px;border-radius:50%;background:white;border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s;
+}
+.play-btn:hover{transform:scale(1.08);box-shadow:0 12px 36px rgba(0,0,0,.3)}
+.play-btn svg{fill:var(--teal);width:22px;height:22px;margin-left:3px}
+.video-caption{font-size:.8rem;color:rgba(255,255,255,.7)}
+.chapters{margin-top:1.75rem;display:flex;flex-direction:column}
+.chapter{
+  display:flex;align-items:center;gap:1rem;
+  padding:1rem 0;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:padding-left .2s;
+}
+.chapter:hover{padding-left:8px}
+.ch-time{font-size:.76rem;font-weight:600;color:var(--teal);min-width:42px;font-variant-numeric:tabular-nums}
+.ch-title{font-size:.88rem;color:var(--ink-2)}
+.ch-arrow{margin-left:auto;color:var(--ink-4);font-size:.9rem}
+
+/* CLINICAL */
+#clinical{background:var(--white)}
+.clinical-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:2.75rem}
+.clinical-card{
+  background:var(--off-white);border:1px solid var(--border);
+  border-radius:16px;padding:1.75rem;transition:box-shadow .3s;
+}
+.clinical-card:hover{box-shadow:var(--shadow-md)}
+.clinical-icon{
+  width:42px;height:42px;background:var(--teal-pale);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;
+}
+.clinical-icon svg{width:20px;height:20px;stroke:var(--teal);fill:none;stroke-width:1.8}
+.clinical-num{font-family:var(--font-display);font-size:2.6rem;font-weight:500;color:var(--teal-dark);line-height:1;margin-bottom:.4rem}
+.clinical-num sup{font-size:1.3rem}
+.clinical-desc{font-size:.87rem;color:var(--ink-2);line-height:1.65}
+.clinical-source{font-size:.7rem;color:var(--ink-4);margin-top:.85rem;font-style:italic}
+
+/* CONTACT */
+#contact{background:var(--paper);display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
+.contact-feats{margin-top:2rem;display:flex;flex-direction:column;gap:1.1rem}
+.cfeat{display:flex;gap:12px;align-items:flex-start}
+.cfeat-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:var(--teal-pale);border:1px solid var(--teal-mid);
+  display:flex;align-items:center;justify-content:center;
+}
+.cfeat-icon svg{width:17px;height:17px;stroke:var(--teal);fill:none;stroke-width:1.8}
+.cfeat-text{font-size:.88rem;color:var(--ink-2);line-height:1.55}
+.cfeat-text strong{color:var(--ink);display:block;font-size:.9rem;margin-bottom:1px}
+.contact-form{background:white;border:1px solid var(--border);border-radius:20px;padding:2.25rem;box-shadow:var(--shadow-md)}
+.form-title{font-size:1.1rem;font-weight:600;color:var(--ink);margin-bottom:1.5rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:.85rem}
+.form-group label{font-size:.76rem;font-weight:600;color:var(--ink-2);letter-spacing:.02em}
+.form-group input,.form-group select,.form-group textarea{
+  padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:var(--font-body);font-size:.9rem;color:var(--ink);background:white;outline:none;
+  transition:border-color .2s;width:100%;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal-light)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-submit{
+  width:100%;padding:13px;background:var(--teal);color:white;border:none;
+  border-radius:100px;font-family:var(--font-body);font-size:.95rem;font-weight:600;
+  cursor:pointer;transition:background .2s,transform .15s;margin-top:.25rem;
+}
+.form-submit:hover{background:var(--teal-dark);transform:translateY(-1px)}
+.form-note{font-size:.72rem;color:var(--ink-4);text-align:center;margin-top:.65rem}
+
+/* FOOTER */
+footer{
+  background:var(--ink);padding:2.5rem 5% 1.75rem;
+  display:flex;flex-direction:column;gap:1.25rem;
+}
+.footer-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-logo{font-family:var(--font-display);font-size:1.15rem;color:rgba(255,255,255,.8)}
+.footer-links{display:flex;gap:1.75rem;flex-wrap:wrap}
+.footer-links a{font-size:.8rem;color:rgba(255,255,255,.4);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:rgba(255,255,255,.85)}
+.footer-copy{font-size:.74rem;color:rgba(255,255,255,.25);border-top:1px solid rgba(255,255,255,.07);padding-top:1.25rem}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s ease}
+.reveal.visible{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  #hero,#viewer,#contact{grid-template-columns:1fr}
+  .uses-grid,.clinical-grid{grid-template-columns:1fr 1fr}
+  .video-layout{grid-template-columns:1fr}
+  .hero-visual{display:none}
+  .form-row{grid-template-columns:1fr}
+  nav .nav-links{display:none}
+}
+@media(max-width:600px){
+  .uses-grid,.clinical-grid{grid-template-columns:1fr}
+}
+</style>
+
+    <meta name="theme-color" content="#0052cc">
+    <link rel="preload" as="image" href="/images/embedded-1.webp">
+    <link rel="preload" as="image" href="/images/embedded-8.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+/* Image optimization */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+/* Prevent layout shift */
+img[loading="lazy"] {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2C10 2 4 6 4 11C4 14.3 6.7 17 10 17C13.3 17 16 14.3 16 11C16 6 10 2 10 2ZM10 7C11.1 7 12 8.1 12 9.5C12 10.9 11.1 12 10 12C8.9 12 8 10.9 8 9.5C8 8.1 8.9 7 10 7Z"/></svg></div>
+    <span class="logo-name">ThoraTech</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#uses">Applications</a></li>
+    <li><a href="#viewer">Technology</a></li>
+    <li><a href="#video">How it Works</a></li>
+    <li><a href="#clinical">Clinical Data</a></li>
+    <li><a href="#contact" class="nav-cta">Request Demo</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span>Monsoon 4 — Now Available</span>
+    </div>
+    <h1>Precision ventilation.<br/><em>Redefined</em> for surgery.</h1>
+    <p class="hero-sub">The Monsoon 4 high-frequency jet ventilation system delivers unparalleled airway control for ENT, thoracic, and cardiac surgery — engineered in Germany for the world's most demanding clinical environments.</p>
+    <div class="actions">
+      <a href="#contact" class="btn-primary">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 6l4-4 4 4M12 2v13M3 18l1.5 3h15L21 18"/></svg>
+        Request a Demo
+      </a>
+      <a href="#viewer" class="btn-outline">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none"/></svg>
+        Explore the Device
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div><span class="stat-val">40+</span><span class="stat-lbl">Countries Installed</span></div>
+      <div><span class="stat-val">20+</span><span class="stat-lbl">Years in Jet Ventilation</span></div>
+      <div><span class="stat-val">ISO</span><span class="stat-lbl">13485 Certified</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-img-wrap">
+      <img src="/images/embedded-1.webp" loading="lazy" alt="Monsoon 4 Jet Ventilator"/>
+      <div class="cert-badge">
+        <div class="cert-badge-icon"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M12 3l1.7 3.3L17 7l-2.3 2.2.5 3.3L12 11l-3.2 1.5.5-3.3L7 7z"/></svg></div>
+        <div><div class="cert-badge-title">MDR CE Mark</div><div class="cert-badge-sub">EU 2017/745 Certified</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CERT STRIP -->
+<div class="cert-strip">
+  <span class="cert-strip-lbl">Certifications</span>
+  <div class="cert-items">
+    <span class="cert-item"><span class="cert-dot"></span>ISO 13485</span>
+    <span class="cert-item"><span class="cert-dot"></span>MDR CE Mark EU 2017/745</span>
+    <span class="cert-item"><span class="cert-dot"></span>FDA 510(k) Cleared</span>
+    <span class="cert-item"><span class="cert-dot"></span>TÜV Rheinland Approved</span>
+    <span class="cert-item"><span class="cert-dot"></span>Made in Germany</span>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<section id="uses">
+  <div class="uses-header">
+    <div>
+      <div class="sec-label reveal">Clinical Applications</div>
+      <h2 class="reveal d1">Built for every<br/>critical airway scenario</h2>
+    </div>
+    <p class="sec-intro reveal d2">From micro-laryngectomy to long-duration thoracic procedures, the Monsoon 4 adapts to your clinical need with precision and safety. <em>Click any card to learn more.</em></p>
+  </div>
+  <div class="uses-grid">
+
+    <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="flip-front-bg" style="background-image:url('/images/embedded-2.png');background-size:cover;background-position:center"></div>
+          <div class="flip-front-overlay"></div>
+          <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div class="flip-front-content">
+            <span class="flip-num">01 / 06</span>
+            <h3>ENT &amp; Laryngeal Surgery</h3>
+            <span class="flip-tag">S-HFJV™ Mode</span>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-close" onclick="event.stopPropagation();this.closest('.flip-card').classList.remove('flipped')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="flip-back-num">01</div>
+          <h3>ENT &amp; Laryngeal Surgery</h3>
+          <p>Tubeless supraglottic jet ventilation provides surgeons unobstructed access and optimal visibility during micro-laryngoscopy and laser resections.</p>
+          <span class="flip-back-tag">S-HFJV™ Mode</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card reveal d1" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="flip-front-bg" style="background-image:url('/images/embedded-3.png');background-size:cover;background-position:center"></div>
+          <div class="flip-front-overlay"></div>
+          <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div class="flip-front-content">
+            <span class="flip-num">02 / 06</span>
+            <h3>Thoracic &amp; Cardiac Surgery</h3>
+            <span class="flip-tag">Motion Reduction</span>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-close" onclick="event.stopPropagation();this.closest('.flip-card').classList.remove('flipped')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="flip-back-num">02</div>
+          <h3>Thoracic &amp; Cardiac Surgery</h3>
+          <p>S-HFJV™ attenuates respiratory motion to a minimum, enabling precise ablation targeting during prolonged cardiac and thoracic interventions.</p>
+          <span class="flip-back-tag">Motion Reduction</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card reveal d2" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="flip-front-bg" style="background-image:url('/images/embedded-4.png');background-size:cover;background-position:center"></div>
+          <div class="flip-front-overlay"></div>
+          <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div class="flip-front-content">
+            <span class="flip-num">03 / 06</span>
+            <h3>Interventional Radiology</h3>
+            <span class="flip-tag">HFJV up to 2000/min</span>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-close" onclick="event.stopPropagation();this.closest('.flip-card').classList.remove('flipped')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="flip-back-num">03</div>
+          <h3>Interventional Radiology</h3>
+          <p>Immobilise the thorax and abdomen during cathlab and IR procedures, ensuring accurate targeting without the risk of endotracheal obstruction.</p>
+          <span class="flip-back-tag">HFJV up to 2000/min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="flip-front-bg" style="background-image:url('/images/embedded-5.png');background-size:cover;background-position:center"></div>
+          <div class="flip-front-overlay"></div>
+          <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div class="flip-front-content">
+            <span class="flip-num">04 / 06</span>
+            <h3>Neonatal &amp; Infant Care</h3>
+            <span class="flip-tag">Gentle Jet Ventilation</span>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-close" onclick="event.stopPropagation();this.closest('.flip-card').classList.remove('flipped')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="flip-back-num">04</div>
+          <h3>Neonatal &amp; Infant Care</h3>
+          <p>Precisely calibrated low-pressure jet ventilation for neonatal and paediatric patients with underdeveloped or fragile lung tissue, minimising barotrauma while maintaining optimal oxygenation.</p>
+          <span class="flip-back-tag">Gentle Jet Ventilation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card reveal d1" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="flip-front-bg" style="background-image:url('/images/embedded-6.png');background-size:cover;background-position:center"></div>
+          <div class="flip-front-overlay"></div>
+          <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div class="flip-front-content">
+            <span class="flip-num">05 / 06</span>
+            <h3>Neurosurgery</h3>
+            <span class="flip-tag">Pressure Stability</span>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-close" onclick="event.stopPropagation();this.closest('.flip-card').classList.remove('flipped')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="flip-back-num">05</div>
+          <h3>Neurosurgery</h3>
+          <p>Stable ventilation with minimal intracranial pressure fluctuations — crucial for delicate neurosurgical procedures where any motion is unacceptable.</p>
+          <span class="flip-back-tag">Pressure Stability</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flip-card reveal d2" onclick="this.classList.toggle('flipped')">
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="flip-front-bg" style="background-image:url('/images/embedded-7.png');background-size:cover;background-position:center"></div>
+          <div class="flip-front-overlay"></div>
+          <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
+          <div class="flip-front-content">
+            <span class="flip-num">06 / 06</span>
+            <h3>Bronchoscopy &amp; Tracheoscopy</h3>
+            <span class="flip-tag">Double-Jet Option</span>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-close" onclick="event.stopPropagation();this.closest('.flip-card').classList.remove('flipped')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="flip-back-num">06</div>
+          <h3>Bronchoscopy &amp; Tracheoscopy</h3>
+          <p>Double-jet ventilation through integrated bronchoscope channels, allowing simultaneous ventilation and diagnostic/therapeutic airway access.</p>
+          <span class="flip-back-tag">Double-Jet Option</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 3D VIEWER -->
+<section id="viewer">
+  <div>
+    <div class="sec-label reveal">Interactive Technology</div>
+    <h2 class="reveal d1">Engineering designed<br/>around the clinician</h2>
+    <p class="sec-intro reveal d2">Every component of the Monsoon 4 is engineered for clinical precision — from the modular housing to the 15″ ThoraDis remote display system.</p>
+    <div class="vspecs reveal d3">
+      <div class="vspec"><div class="vspec-val">2000<small style="font-size:.9rem">/min</small></div><div class="vspec-lbl">Max HFJV Frequency</div></div>
+      <div class="vspec"><div class="vspec-val">15″</div><div class="vspec-lbl">ThoraDis Touch Display</div></div>
+      <div class="vspec"><div class="vspec-val">ARGC</div><div class="vspec-lbl">Adaptive Gas Climatisation</div></div>
+      <div class="vspec"><div class="vspec-val">S-HF</div><div class="vspec-lbl">Superimposed Jet Modes</div></div>
+    </div>
+  </div>
+  <div class="viewer-stage reveal d1">
+    <img id="viewer-img" class="viewer-img" src="/images/embedded-10.webp" loading="lazy" alt="Monsoon 4 full system"/>
+    <div class="viewer-btns">
+      <button class="vbtn active" id="vbtn0" onclick="setViewer(0)">Full System</button>
+      <button class="vbtn" id="vbtn1" onclick="setViewer(1)">Internal Engineering</button>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section id="video">
+  <div class="video-layout">
+    <div>
+      <div class="sec-label reveal">Clinical Training</div>
+      <h2 class="reveal d1">See the Monsoon 4<br/>in action</h2>
+      <p class="sec-intro reveal d2">Step-by-step tutorial series developed with leading anaesthesiologists — from first setup to advanced ventilation modes.</p>
+      <div class="chapters reveal d3">
+        <div class="chapter"><span class="ch-time">00:00</span><span class="ch-title">Device Overview &amp; Unboxing</span><span class="ch-arrow">›</span></div>
+        <div class="chapter"><span class="ch-time">02:14</span><span class="ch-title">S-HFJV™ Setup for ENT Surgery</span><span class="ch-arrow">›</span></div>
+        <div class="chapter"><span class="ch-time">06:40</span><span class="ch-title">ThoraDis Remote Display Integration</span><span class="ch-arrow">›</span></div>
+        <div class="chapter"><span class="ch-time">11:22</span><span class="ch-title">Alarm Management &amp; Safety Protocols</span><span class="ch-arrow">›</span></div>
+        <div class="chapter"><span class="ch-time">17:05</span><span class="ch-title">ICU Configuration &amp; Humidification</span><span class="ch-arrow">›</span></div>
+      </div>
+    </div>
+    <div class="reveal d1">
+      <div class="video-player">
+        <img src="/images/embedded-9.webp" loading="lazy" alt="Monsoon 4 in hospital setting"/>
+        <div class="video-overlay">
+          <button class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div class="video-caption">Monsoon 4 — Clinical Tutorial Series (18 min)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLINICAL -->
+<section id="clinical">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:.5rem">
+    <div>
+      <div class="sec-label reveal">Evidence-Based</div>
+      <h2 class="reveal d1">Clinical outcomes<br/>you can measure</h2>
+    </div>
+    <p class="sec-intro reveal d2" style="max-width:360px">Published clinical data from university hospitals using ThoraTech jet ventilation in real-world surgical settings.</p>
+  </div>
+  <div class="clinical-grid">
+    <div class="clinical-card reveal">
+      <div class="clinical-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      <div class="clinical-num">30<sup>%</sup></div>
+      <div class="clinical-desc">Reduction in mean anaesthesia time during laryngeal surgery when using S-HFJV™ vs conventional intubation.</div>
+      <div class="clinical-source">Source: University Hospital Vienna, Aloy et al., 2019</div>
+    </div>
+    <div class="clinical-card reveal d1">
+      <div class="clinical-icon"><svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg></div>
+      <div class="clinical-num">98<sup>%</sup></div>
+      <div class="clinical-desc">Oxygen saturation maintained above 94% in over 98% of all documented ENT cases across 40+ participating hospitals.</div>
+      <div class="clinical-source">Source: Multi-centre registry, ThoraTech GmbH, 2022</div>
+    </div>
+    <div class="clinical-card reveal d2">
+      <div class="clinical-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div class="clinical-num">&lt;2mm</div>
+      <div class="clinical-desc">Residual respiratory organ motion at 2000/min, enabling precise ablation and minimally invasive oncological targeting.</div>
+      <div class="clinical-source">Source: Radiology Dept, Charité Berlin, 2021</div>
+    </div>
+  </div>
+  <div style="margin-top:2.25rem;display:flex;gap:1.25rem;flex-wrap:wrap">
+    <a href="#contact" class="btn-primary">Download Clinical Evidence Pack <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>
+    <a href="#contact" class="btn-outline">Request Case Studies</a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div>
+    <div class="sec-label reveal">Get in Touch</div>
+    <h2 class="reveal d1">Partner with ThoraTech<br/>for your hospital</h2>
+    <p class="sec-intro reveal d2">Our clinical specialists guide you through procurement, from first demo to full department rollout.</p>
+    <div class="contact-feats reveal d3">
+      <div class="cfeat">
+        <div class="cfeat-icon"><svg viewBox="0 0 24 24"><path d="M8 6l4-4 4 4M12 2v13"/><path d="M3 18l1.5 3h15L21 18"/></svg></div>
+        <div class="cfeat-text"><strong>Live Device Demonstration</strong>We bring the Monsoon 4 to your facility for an on-site clinical evaluation.</div>
+      </div>
+      <div class="cfeat">
+        <div class="cfeat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <div class="cfeat-text"><strong>Procurement &amp; Tendering Support</strong>CE certificates, technical specs, and documentation for hospital procurement teams.</div>
+      </div>
+      <div class="cfeat">
+        <div class="cfeat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20v-2a8 8 0 0116 0v2"/></svg></div>
+        <div class="cfeat-text"><strong>Clinical Training Programme</strong>On-site and virtual training for anaesthesiology and OR teams with ongoing support.</div>
+      </div>
+    </div>
+  </div>
+  <div class="contact-form reveal d1">
+    <div class="form-title">Request a Demo or Quote</div>
+    <div class="form-row">
+      <div class="form-group"><label>First Name</label><input type="text" placeholder="Dr. Roland"/></div>
+      <div class="form-group"><label>Last Name</label><input type="text" placeholder="Hotz"/></div>
+    </div>
+    <div class="form-group"><label>Hospital / Institution</label><input type="text" placeholder="University Hospital Frankfurt"/></div>
+    <div class="form-group"><label>Country</label>
+      <select><option>Germany</option><option>Austria</option><option>Switzerland</option><option>United Kingdom</option><option>United States</option><option>Other</option></select>
+    </div>
+    <div class="form-group"><label>Area of Interest</label>
+      <select><option>ENT / Laryngeal Surgery</option><option>Thoracic / Cardiac Surgery</option><option>Interventional Radiology</option><option>Neonatal &amp; Infant Care</option><option>Neurosurgery</option><option>General Inquiry</option></select>
+    </div>
+    <div class="form-group"><label>Message</label><textarea placeholder="Describe your clinical requirements or questions…"></textarea></div>
+    <button class="form-submit">Submit Inquiry →</button>
+    <p class="form-note">ISO 13485 certified · Your data is never shared · Response within 24 hours</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-logo">ThoraTech Medical GmbH</div>
+    <div class="footer-links">
+      <a href="#">Products</a><a href="#">Clinical Data</a><a href="#">Certifications</a>
+      <a href="#">Training</a><a href="#">Contact</a><a href="#">Imprint</a><a href="#">Privacy Policy</a>
+    </div>
+  </div>
+  <p class="footer-copy">© 2025 Thora Tech Medical GmbH · Gießen, Germany · ISO 13485 Certified · MDR CE Mark · For Healthcare Professionals Only</p>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.12});
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Viewer toggle — img3=full system, img4=internal engineering
+const viewerSrcs = [
+  "/images/embedded-10.png",
+  "/images/embedded-11.png"
+];
+function setViewer(idx) {
+  const el = document.getElementById('viewer-img');
+  el.style.opacity = '0'; el.style.transform = 'scale(0.97)';
+  setTimeout(() => {
+    el.src = viewerSrcs[idx];
+    el.style.opacity = '1'; el.style.transform = 'scale(1)';
+  }, 220);
+  document.querySelectorAll('.vbtn').forEach((b,i) => b.classList.toggle('active', i===idx));
+}
+</script>
+</body>
+</html>
