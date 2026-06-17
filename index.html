@@ -99,7 +99,7 @@ h1 em{font-style:italic;color:var(--teal)}
 .hero-img-wrap{position:relative}
 .hero-img-wrap img{
   width:clamp(400px, 90vw, 600px);max-width:100%;
-  filter:drop-shadow(0 24px 60px rgba(0,82,204,0.16)) hue-rotate(30deg) saturate(1.2));
+  filter:drop-shadow(0 24px 60px rgba(0,82,204,0.16));
   animation:float 5s ease-in-out infinite;
 }
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
@@ -261,6 +261,7 @@ h2{
   display:flex;align-items:center;gap:1rem;
   padding:1rem 0;border-bottom:1px solid var(--border);
   cursor:pointer;transition:padding-left .2s;
+  text-decoration:none;color:inherit;
 }
 .chapter:hover{padding-left:8px}
 .ch-time{font-size:.76rem;font-weight:600;color:var(--teal);min-width:42px;font-variant-numeric:tabular-nums}
@@ -349,8 +350,8 @@ footer{
 </style>
 
     <meta name="theme-color" content="#0052cc">
-    <link rel="preload" as="image" href="embedded-1.webp">
-    <link rel="preload" as="image" href="embedded-8.webp">
+    <link rel="preload" as="image" href="images/embedded-1.webp">
+    <link rel="preload" as="image" href="images/embedded-8.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
@@ -376,14 +377,15 @@ img[loading="lazy"] {
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="logo">
+  <a href="index.html" class="logo">
     <div class="logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2C10 2 4 6 4 11C4 14.3 6.7 17 10 17C13.3 17 16 14.3 16 11C16 6 10 2 10 2ZM10 7C11.1 7 12 8.1 12 9.5C12 10.9 11.1 12 10 12C8.9 12 8 10.9 8 9.5C8 8.1 8.9 7 10 7Z"/></svg></div>
     <span class="logo-name">ThoraTech</span>
   </a>
   <ul class="nav-links">
     <li><a href="#uses">Applications</a></li>
-    <li><a href="#viewer">Technology</a></li>
-    <li><a href="#video">How it Works</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="why-monsoon4.html">Why Monsoon 4</a></li>
+    <li><a href="simulator.html">Try the Panel</a></li>
     <li><a href="#clinical">Clinical Data</a></li>
     <li><a href="#contact" class="nav-cta">Request Demo</a></li>
   </ul>
@@ -404,9 +406,9 @@ img[loading="lazy"] {
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 6l4-4 4 4M12 2v13M3 18l1.5 3h15L21 18"/></svg>
         Request a Demo
       </a>
-      <a href="#viewer" class="btn-outline">
+      <a href="simulator.html" class="btn-outline">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none"/></svg>
-        Explore the Device
+        Try the Control Panel
       </a>
     </div>
     <div class="hero-stats">
@@ -417,7 +419,7 @@ img[loading="lazy"] {
   </div>
   <div class="hero-visual">
     <div class="hero-img-wrap">
-      <img src="embedded-1.webp" loading="lazy" alt="Monsoon 4 Jet Ventilator"/>
+      <img src="images/embedded-1.webp" loading="lazy" alt="Monsoon 4 Jet Ventilator"/>
       <div class="cert-badge">
         <div class="cert-badge-icon"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M12 3l1.7 3.3L17 7l-2.3 2.2.5 3.3L12 11l-3.2 1.5.5-3.3L7 7z"/></svg></div>
         <div><div class="cert-badge-title">MDR CE Mark</div><div class="cert-badge-sub">EU 2017/745 Certified</div></div>
@@ -452,7 +454,7 @@ img[loading="lazy"] {
     <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
         <div class="flip-front">
-          <div class="flip-front-bg" style="background-image:url('embedded-2.webp');background-size:cover;background-position:center"></div>
+          <div class="flip-front-bg" style="background-image:url('images/embedded-2.webp');background-size:cover;background-position:center"></div>
           <div class="flip-front-overlay"></div>
           <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
           <div class="flip-front-content">
@@ -474,7 +476,7 @@ img[loading="lazy"] {
     <div class="flip-card reveal d1" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
         <div class="flip-front">
-          <div class="flip-front-bg" style="background-image:url('embedded-3.webp');background-size:cover;background-position:center"></div>
+          <div class="flip-front-bg" style="background-image:url('images/embedded-3.webp');background-size:cover;background-position:center"></div>
           <div class="flip-front-overlay"></div>
           <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
           <div class="flip-front-content">
@@ -496,7 +498,7 @@ img[loading="lazy"] {
     <div class="flip-card reveal d2" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
         <div class="flip-front">
-          <div class="flip-front-bg" style="background-image:url('embedded-4.webp');background-size:cover;background-position:center"></div>
+          <div class="flip-front-bg" style="background-image:url('images/embedded-4.webp');background-size:cover;background-position:center"></div>
           <div class="flip-front-overlay"></div>
           <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
           <div class="flip-front-content">
@@ -518,7 +520,7 @@ img[loading="lazy"] {
     <div class="flip-card reveal" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
         <div class="flip-front">
-          <div class="flip-front-bg" style="background-image:url('embedded-5.webp');background-size:cover;background-position:center"></div>
+          <div class="flip-front-bg" style="background-image:url('images/embedded-5.webp');background-size:cover;background-position:center"></div>
           <div class="flip-front-overlay"></div>
           <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
           <div class="flip-front-content">
@@ -540,7 +542,7 @@ img[loading="lazy"] {
     <div class="flip-card reveal d1" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
         <div class="flip-front">
-          <div class="flip-front-bg" style="background-image:url('embedded-6.webp');background-size:cover;background-position:center"></div>
+          <div class="flip-front-bg" style="background-image:url('images/embedded-6.webp');background-size:cover;background-position:center"></div>
           <div class="flip-front-overlay"></div>
           <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
           <div class="flip-front-content">
@@ -562,7 +564,7 @@ img[loading="lazy"] {
     <div class="flip-card reveal d2" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
         <div class="flip-front">
-          <div class="flip-front-bg" style="background-image:url('embedded-7.webp');background-size:cover;background-position:center"></div>
+          <div class="flip-front-bg" style="background-image:url('images/embedded-7.webp');background-size:cover;background-position:center"></div>
           <div class="flip-front-overlay"></div>
           <div class="flip-hint"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
           <div class="flip-front-content">
@@ -598,7 +600,7 @@ img[loading="lazy"] {
     </div>
   </div>
   <div class="viewer-stage reveal d1">
-    <img id="viewer-img" class="viewer-img" src="embedded-10.webp" loading="lazy" alt="Monsoon 4 full system"/>
+    <img id="viewer-img" class="viewer-img" src="images/embedded-10.webp" loading="lazy" alt="Monsoon 4 full system"/>
     <div class="viewer-btns">
       <button class="vbtn active" id="vbtn0" onclick="setViewer(0)">Full System</button>
       <button class="vbtn" id="vbtn1" onclick="setViewer(1)">Internal Engineering</button>
@@ -612,23 +614,23 @@ img[loading="lazy"] {
     <div>
       <div class="sec-label reveal">Clinical Training</div>
       <h2 class="reveal d1">See the Monsoon 4<br/>in action</h2>
-      <p class="sec-intro reveal d2">Step-by-step tutorial series developed with leading anaesthesiologists — from first setup to advanced ventilation modes.</p>
+      <p class="sec-intro reveal d2">Step-by-step tutorial series developed with leading anaesthesiologists — from first setup to advanced ventilation modes. <em>Open any chapter to launch the interactive control panel.</em></p>
       <div class="chapters reveal d3">
-        <div class="chapter"><span class="ch-time">00:00</span><span class="ch-title">Device Overview &amp; Unboxing</span><span class="ch-arrow">›</span></div>
-        <div class="chapter"><span class="ch-time">02:14</span><span class="ch-title">S-HFJV™ Setup for ENT Surgery</span><span class="ch-arrow">›</span></div>
-        <div class="chapter"><span class="ch-time">06:40</span><span class="ch-title">ThoraDis Remote Display Integration</span><span class="ch-arrow">›</span></div>
-        <div class="chapter"><span class="ch-time">11:22</span><span class="ch-title">Alarm Management &amp; Safety Protocols</span><span class="ch-arrow">›</span></div>
-        <div class="chapter"><span class="ch-time">17:05</span><span class="ch-title">ICU Configuration &amp; Humidification</span><span class="ch-arrow">›</span></div>
+        <a class="chapter" href="simulator.html"><span class="ch-time">00:00</span><span class="ch-title">Device Overview &amp; Unboxing</span><span class="ch-arrow">›</span></a>
+        <a class="chapter" href="simulator.html"><span class="ch-time">02:14</span><span class="ch-title">S-HFJV™ Setup for ENT Surgery</span><span class="ch-arrow">›</span></a>
+        <a class="chapter" href="simulator.html"><span class="ch-time">06:40</span><span class="ch-title">ThoraDis Remote Display Integration</span><span class="ch-arrow">›</span></a>
+        <a class="chapter" href="simulator.html"><span class="ch-time">11:22</span><span class="ch-title">Alarm Management &amp; Safety Protocols</span><span class="ch-arrow">›</span></a>
+        <a class="chapter" href="simulator.html"><span class="ch-time">17:05</span><span class="ch-title">ICU Configuration &amp; Humidification</span><span class="ch-arrow">›</span></a>
       </div>
     </div>
     <div class="reveal d1">
-      <div class="video-player">
-        <img src="embedded-9.webp" loading="lazy" alt="Monsoon 4 in hospital setting"/>
+      <a class="video-player" href="simulator.html" style="display:block;text-decoration:none">
+        <img src="images/embedded-9.webp" loading="lazy" alt="Monsoon 4 in hospital setting"/>
         <div class="video-overlay">
-          <button class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-          <div class="video-caption">Monsoon 4 — Clinical Tutorial Series (18 min)</div>
+          <span class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+          <div class="video-caption">Launch the interactive control panel →</div>
         </div>
-      </div>
+      </a>
     </div>
   </div>
 </section>
@@ -692,10 +694,10 @@ img[loading="lazy"] {
   <div class="contact-form reveal d1">
     <div class="form-title">Request a Demo or Quote</div>
     <div class="form-row">
-      <div class="form-group"><label>First Name</label><input type="text" placeholder="Dr. Roland"/></div>
-      <div class="form-group"><label>Last Name</label><input type="text" placeholder="Hotz"/></div>
+      <div class="form-group"><label>First Name</label><input type="text" placeholder="First name"/></div>
+      <div class="form-group"><label>Last Name</label><input type="text" placeholder="Last name"/></div>
     </div>
-    <div class="form-group"><label>Hospital / Institution</label><input type="text" placeholder="University Hospital Frankfurt"/></div>
+    <div class="form-group"><label>Hospital / Institution</label><input type="text" placeholder="Hospital or institution name"/></div>
     <div class="form-group"><label>Country</label>
       <select><option>Germany</option><option>Austria</option><option>Switzerland</option><option>United Kingdom</option><option>United States</option><option>Other</option></select>
     </div>
@@ -713,8 +715,9 @@ img[loading="lazy"] {
   <div class="footer-top">
     <div class="footer-logo">ThoraTech Medical GmbH</div>
     <div class="footer-links">
-      <a href="#">Products</a><a href="#">Clinical Data</a><a href="#">Certifications</a>
-      <a href="#">Training</a><a href="#">Contact</a><a href="#">Imprint</a><a href="#">Privacy Policy</a>
+      <a href="index.html#uses">Applications</a><a href="how-it-works.html">How It Works</a><a href="why-monsoon4.html">Why Monsoon 4</a>
+      <a href="simulator.html">Try the Panel</a><a href="index.html#clinical">Clinical Data</a>
+      <a href="monsoon-4-instructions-for-use.pdf" target="_blank" rel="noopener">Instructions for Use (PDF)</a><a href="index.html#contact">Contact</a>
     </div>
   </div>
   <p class="footer-copy">© 2025 Thora Tech Medical GmbH · Gießen, Germany · ISO 13485 Certified · MDR CE Mark · For Healthcare Professionals Only</p>
@@ -729,8 +732,8 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 // Viewer toggle — img3=full system, img4=internal engineering
 const viewerSrcs = [
-  "embedded-10.webp",
-  "embedded-11.webp"
+  "images/embedded-10.webp",
+  "images/embedded-11.webp"
 ];
 function setViewer(idx) {
   const el = document.getElementById('viewer-img');

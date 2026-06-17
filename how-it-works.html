@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ThoraTech — Monsoon 4 Jet Ventilator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0052cc;--teal-light:#0066ff;--teal-pale:#f0f5ff;--teal-mid:#b3d9ff;--teal-dark:#003d99;
+  --white:#ffffff;--off-white:#f8fafb;--paper:#f5f8fc;
+  --ink:#0d1a14;--ink-2:#2e4039;--ink-3:#5a706a;--ink-4:#9aa6b8;
+  --border:#e8ecf0;--border-strong:#c5d9ed;
+  --font-body:'DM Sans',sans-serif;--font-display:'Playfair Display',serif;
+  --shadow-sm:0 1px 4px rgba(0,82,204,0.06);
+  --shadow-md:0 4px 20px rgba(0,82,204,0.09);
+  --shadow-lg:0 16px 56px rgba(0,82,204,0.13);
+  --radius:12px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--white);color:var(--ink);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,0.96);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:0 5%;height:68px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:34px;height:34px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{fill:white;width:18px;height:18px}
+.logo-name{font-family:var(--font-display);font-size:1.3rem;font-weight:500;color:var(--teal-dark)}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a{font-size:0.85rem;font-weight:500;color:var(--ink-2);text-decoration:none;letter-spacing:0.03em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--teal)}
+.nav-cta{background:var(--teal)!important;color:white!important;padding:8px 20px;border-radius:100px;transition:background .2s!important}
+.nav-cta:hover{background:var(--teal-dark)!important}
+
+/* HERO */
+#hero{
+  min-height:100vh;padding:68px 5% 0;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4rem;
+  background:var(--white);
+  position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:radial-gradient(ellipse 70% 80% at 80% 50%,var(--teal-pale) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-content{position:relative;z-index:1;padding:5rem 0 4rem}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--teal-pale);border:1px solid var(--teal-mid);
+  padding:5px 14px;border-radius:100px;margin-bottom:1.75rem;
+}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--teal-light);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.eyebrow span{font-size:0.75rem;font-weight:600;color:var(--teal-dark);letter-spacing:.08em;text-transform:uppercase}
+h1{
+  font-family:var(--font-display);font-size:clamp(2.6rem,4.5vw,4rem);
+  font-weight:500;line-height:1.1;color:var(--ink);letter-spacing:-.02em;margin-bottom:1.25rem;
+}
+h1 em{font-style:italic;color:var(--teal)}
+.hero-sub{font-size:1rem;color:var(--ink-2);max-width:460px;line-height:1.8;font-weight:300;margin-bottom:2rem}
+.actions{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--teal);color:white;padding:13px 26px;border-radius:100px;
+  font-weight:500;font-size:.92rem;text-decoration:none;border:none;cursor:pointer;
+  transition:background .2s,transform .15s;
+}
+.btn-primary:hover{background:var(--teal-dark);transform:translateY(-1px)}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:8px;
+  background:white;color:var(--teal);padding:13px 26px;border-radius:100px;
+  font-weight:500;font-size:.92rem;text-decoration:none;
+  border:1.5px solid var(--teal);cursor:pointer;transition:all .2s;
+}
+.btn-outline:hover{background:var(--teal-pale)}
+.hero-stats{
+  display:flex;gap:2.5rem;margin-top:3rem;padding-top:2.5rem;
+  border-top:1px solid var(--border);
+}
+.stat-val{font-family:var(--font-display);font-size:2rem;font-weight:500;color:var(--teal-dark);display:block}
+.stat-lbl{font-size:0.75rem;color:var(--ink-3);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+
+/* HERO VISUAL */
+.hero-visual{
+  position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  padding:6rem 0 4rem;
+}
+.hero-img-wrap{position:relative}
+.hero-img-wrap img{
+  width:clamp(400px, 90vw, 600px);max-width:100%;
+  filter:drop-shadow(0 24px 60px rgba(0,82,204,0.16));
+  animation:float 5s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.cert-badge{
+  position:absolute;bottom:-8px;right:-20px;
+  background:white;border:1px solid var(--border);border-radius:14px;
+  padding:10px 14px;box-shadow:var(--shadow-md);
+  display:flex;align-items:center;gap:10px;
+}
+.cert-badge-icon{width:32px;height:32px;background:var(--teal-pale);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.cert-badge-icon svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2}
+.cert-badge-title{font-size:.74rem;font-weight:600;color:var(--teal-dark)}
+.cert-badge-sub{font-size:.66rem;color:var(--ink-3)}
+
+/* CERT STRIP */
+.cert-strip{
+  background:var(--teal-pale);border-top:1px solid var(--teal-mid);border-bottom:1px solid var(--teal-mid);padding:1.1rem 5%;
+  display:flex;align-items:center;gap:2.5rem;overflow:hidden;
+}
+.cert-strip-lbl{font-size:.7rem;font-weight:600;color:var(--teal-dark);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.cert-items{display:flex;gap:2.5rem;flex-wrap:wrap}
+.cert-item{font-size:.8rem;font-weight:500;color:var(--teal-dark);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.cert-dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+
+/* SECTION COMMON */
+section{padding:6rem 5%}
+.sec-label{
+  font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:.85rem;display:flex;align-items:center;gap:8px;
+}
+.sec-label::before{content:'';display:block;width:22px;height:1px;background:var(--teal)}
+h2{
+  font-family:var(--font-display);font-size:clamp(1.9rem,3vw,2.75rem);
+  font-weight:500;line-height:1.15;color:var(--ink);letter-spacing:-.02em;margin-bottom:1rem;
+}
+.sec-intro{font-size:1rem;color:var(--ink-2);max-width:520px;line-height:1.8;font-weight:300}
+
+/* USES – white theme */
+#uses{background:var(--off-white)}
+.uses-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2.75rem;flex-wrap:wrap;gap:1rem}
+.uses-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+
+/* FLIP CARDS */
+.flip-card{aspect-ratio:4/3;cursor:pointer;perspective:1200px}
+.flip-inner{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.4,.2,.2,1);
+}
+.flip-card.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{
+  position:absolute;inset:0;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;
+}
+/* FRONT */
+.flip-front{display:flex;flex-direction:column;justify-content:flex-end;background:#f0f5ff}
+.flip-front-bg{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  transition:transform .5s ease;
+}
+.flip-card:hover .flip-front-bg{transform:scale(1.04)}
+.flip-front-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,82,204,.65) 0%,rgba(0,82,204,.08) 55%,transparent 100%);
+}
+.flip-front-content{position:relative;z-index:2;padding:1.25rem 1.5rem 1.1rem}
+.flip-num{font-family:var(--font-display);font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.06em;display:block;margin-bottom:.3rem}
+.flip-front h3{font-family:var(--font-display);font-size:1.15rem;font-weight:500;color:white;line-height:1.25;margin-bottom:.6rem}
+.flip-tag{
+  display:inline-block;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:white;
+  font-size:.62rem;font-weight:700;padding:3px 10px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase;
+}
+.flip-hint{
+  position:absolute;top:12px;right:12px;z-index:3;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;transition:background .2s;
+}
+.flip-card:hover .flip-hint{background:rgba(0,82,204,.25)}
+.flip-hint svg{width:11px;height:11px;stroke:white;fill:none;stroke-width:2}
+/* BACK – clean white */
+.flip-back{
+  transform:rotateY(180deg);
+  background:white;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:2rem 1.75rem;
+  border:1px solid var(--border);
+}
+.flip-back-num{
+  font-family:var(--font-display);font-size:3rem;font-weight:500;
+  color:#e8f0ff;line-height:1;margin-bottom:.5rem;
+}
+.flip-back h3{font-family:var(--font-display);font-size:1.05rem;font-weight:500;color:var(--ink);margin-bottom:.85rem;line-height:1.3}
+.flip-back p{font-size:.87rem;color:var(--ink-2);line-height:1.75;margin-bottom:1.1rem}
+.flip-back-tag{
+  display:inline-block;background:var(--teal-pale);color:var(--teal-dark);
+  font-size:.62rem;font-weight:700;padding:4px 12px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase;
+}
+.flip-close{
+  position:absolute;top:12px;right:12px;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--paper);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .2s;
+}
+.flip-close:hover{background:var(--teal-pale)}
+.flip-close svg{width:11px;height:11px;stroke:var(--ink-3);fill:none;stroke-width:2.5}
+
+/* 3D VIEWER */
+#viewer{background:var(--white);display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:5rem}
+.vspecs{margin-top:2.25rem;display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.vspec{
+  background:var(--off-white);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.1rem;
+}
+.vspec-val{font-family:var(--font-display);font-size:1.5rem;color:var(--teal-dark)}
+.vspec-lbl{font-size:.75rem;color:var(--ink-3);margin-top:2px}
+.viewer-stage{
+  position:relative;display:flex;flex-direction:column;
+  align-items:center;gap:1.25rem;
+}
+.viewer-img{
+  width:100%;max-width:520px;border-radius:16px;
+  box-shadow:var(--shadow-lg);transition:opacity .3s,transform .3s;
+  cursor:pointer;
+}
+.viewer-btns{display:flex;gap:10px}
+.vbtn{
+  padding:8px 18px;border-radius:100px;font-size:.78rem;font-weight:500;cursor:pointer;
+  border:1.5px solid var(--border);background:white;color:var(--ink-2);
+  transition:all .2s;font-family:var(--font-body);
+}
+.vbtn.active,.vbtn:hover{background:var(--teal-pale);border-color:var(--teal-mid);color:var(--teal-dark)}
+
+/* VIDEO */
+#video{background:var(--paper)}
+.video-layout{display:grid;grid-template-columns:1fr 1.5fr;gap:5rem;align-items:center}
+.video-player{
+  position:relative;border-radius:20px;overflow:hidden;
+  aspect-ratio:4/3;box-shadow:var(--shadow-lg);
+}
+.video-player img{width:100%;height:100%;object-fit:cover}
+.video-overlay{
+  position:absolute;inset:0;background:rgba(8,40,28,.4);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+}
+.play-btn{
+  width:68px;height:68px;border-radius:50%;background:white;border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s;
+}
+.play-btn:hover{transform:scale(1.08);box-shadow:0 12px 36px rgba(0,0,0,.3)}
+.play-btn svg{fill:var(--teal);width:22px;height:22px;margin-left:3px}
+.video-caption{font-size:.8rem;color:rgba(255,255,255,.7)}
+.chapters{margin-top:1.75rem;display:flex;flex-direction:column}
+.chapter{
+  display:flex;align-items:center;gap:1rem;
+  padding:1rem 0;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:padding-left .2s;
+}
+.chapter:hover{padding-left:8px}
+.ch-time{font-size:.76rem;font-weight:600;color:var(--teal);min-width:42px;font-variant-numeric:tabular-nums}
+.ch-title{font-size:.88rem;color:var(--ink-2)}
+.ch-arrow{margin-left:auto;color:var(--ink-4);font-size:.9rem}
+
+/* CLINICAL */
+#clinical{background:var(--white)}
+.clinical-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:2.75rem}
+.clinical-card{
+  background:var(--off-white);border:1px solid var(--border);
+  border-radius:16px;padding:1.75rem;transition:box-shadow .3s;
+}
+.clinical-card:hover{box-shadow:var(--shadow-md)}
+.clinical-icon{
+  width:42px;height:42px;background:var(--teal-pale);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem;
+}
+.clinical-icon svg{width:20px;height:20px;stroke:var(--teal);fill:none;stroke-width:1.8}
+.clinical-num{font-family:var(--font-display);font-size:2.6rem;font-weight:500;color:var(--teal-dark);line-height:1;margin-bottom:.4rem}
+.clinical-num sup{font-size:1.3rem}
+.clinical-desc{font-size:.87rem;color:var(--ink-2);line-height:1.65}
+.clinical-source{font-size:.7rem;color:var(--ink-4);margin-top:.85rem;font-style:italic}
+
+/* CONTACT */
+#contact{background:var(--paper);display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
+.contact-feats{margin-top:2rem;display:flex;flex-direction:column;gap:1.1rem}
+.cfeat{display:flex;gap:12px;align-items:flex-start}
+.cfeat-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:var(--teal-pale);border:1px solid var(--teal-mid);
+  display:flex;align-items:center;justify-content:center;
+}
+.cfeat-icon svg{width:17px;height:17px;stroke:var(--teal);fill:none;stroke-width:1.8}
+.cfeat-text{font-size:.88rem;color:var(--ink-2);line-height:1.55}
+.cfeat-text strong{color:var(--ink);display:block;font-size:.9rem;margin-bottom:1px}
+.contact-form{background:white;border:1px solid var(--border);border-radius:20px;padding:2.25rem;box-shadow:var(--shadow-md)}
+.form-title{font-size:1.1rem;font-weight:600;color:var(--ink);margin-bottom:1.5rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:.85rem}
+.form-group label{font-size:.76rem;font-weight:600;color:var(--ink-2);letter-spacing:.02em}
+.form-group input,.form-group select,.form-group textarea{
+  padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:var(--font-body);font-size:.9rem;color:var(--ink);background:white;outline:none;
+  transition:border-color .2s;width:100%;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal-light)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-submit{
+  width:100%;padding:13px;background:var(--teal);color:white;border:none;
+  border-radius:100px;font-family:var(--font-body);font-size:.95rem;font-weight:600;
+  cursor:pointer;transition:background .2s,transform .15s;margin-top:.25rem;
+}
+.form-submit:hover{background:var(--teal-dark);transform:translateY(-1px)}
+.form-note{font-size:.72rem;color:var(--ink-4);text-align:center;margin-top:.65rem}
+
+/* FOOTER */
+footer{
+  background:var(--ink);padding:2.5rem 5% 1.75rem;
+  display:flex;flex-direction:column;gap:1.25rem;
+}
+.footer-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-logo{font-family:var(--font-display);font-size:1.15rem;color:rgba(255,255,255,.8)}
+.footer-links{display:flex;gap:1.75rem;flex-wrap:wrap}
+.footer-links a{font-size:.8rem;color:rgba(255,255,255,.4);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:rgba(255,255,255,.85)}
+.footer-copy{font-size:.74rem;color:rgba(255,255,255,.25);border-top:1px solid rgba(255,255,255,.07);padding-top:1.25rem}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s ease}
+.reveal.visible{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  #hero,#viewer,#contact{grid-template-columns:1fr}
+  .uses-grid,.clinical-grid{grid-template-columns:1fr 1fr}
+  .video-layout{grid-template-columns:1fr}
+  .hero-visual{display:none}
+  .form-row{grid-template-columns:1fr}
+  nav .nav-links{display:none}
+}
+@media(max-width:600px){
+  .uses-grid,.clinical-grid{grid-template-columns:1fr}
+}
+</style>
+
+    <meta name="theme-color" content="#0052cc">
+    <link rel="preload" as="image" href="images/embedded-1.webp">
+    <link rel="preload" as="image" href="images/embedded-8.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+/* Image optimization */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+/* Prevent layout shift */
+img[loading="lazy"] {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+</style>
+<style>
+/* EXTRA — How It Works / Why Different pages */
+.page-hero{padding:11rem 5% 4rem;background:var(--white);position:relative;overflow:hidden}
+.page-hero .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 80% 0%,var(--teal-pale) 0%,transparent 70%);pointer-events:none}
+.page-hero .inner{position:relative;z-index:1;max-width:760px}
+.page-hero h1{font-size:clamp(2.4rem,4vw,3.4rem)}
+.page-hero p{font-size:1.02rem;color:var(--ink-2);max-width:600px;font-weight:300;line-height:1.8}
+
+.principle-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.principle-visual{background:var(--off-white);border:1px solid var(--border);border-radius:20px;padding:2.25rem}
+.principle-visual svg{width:100%;height:auto}
+.principle-visual .core{fill:var(--teal)}
+.principle-visual .entrain{fill:none;stroke:var(--border-strong);stroke-width:1.5;stroke-dasharray:4 4}
+.principle-visual text{font-family:var(--font-body);font-size:11px;fill:var(--ink-3)}
+.principle-list{list-style:none;display:flex;flex-direction:column;gap:1.6rem}
+.principle-list li{display:flex;gap:1.1rem}
+.pl-num{
+  font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--teal-dark);
+  border:1.5px solid var(--teal-mid);border-radius:50%;width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--teal-pale);
+}
+.principle-list h4{font-family:var(--font-display);font-size:1.08rem;font-weight:500;margin-bottom:.3rem;color:var(--ink)}
+.principle-list p{font-size:.9rem;color:var(--ink-2);line-height:1.7;font-weight:300}
+
+/* Step flow */
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:2.75rem}
+.flow-step{position:relative;background:var(--off-white);border:1px solid var(--border);border-radius:16px;padding:1.75rem;}
+.flow-step .num{font-family:var(--font-display);font-size:2.4rem;font-weight:500;color:var(--teal-mid);line-height:1;margin-bottom:.75rem}
+.flow-step h4{font-family:var(--font-display);font-size:1.02rem;font-weight:500;margin-bottom:.5rem;color:var(--ink)}
+.flow-step p{font-size:.85rem;color:var(--ink-2);line-height:1.65;font-weight:300}
+.flow-arrow{position:absolute;top:2.2rem;right:-1.1rem;width:22px;height:22px;color:var(--teal-mid);z-index:2}
+
+/* Access method cards */
+.access-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2.75rem}
+.access-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.85rem;transition:box-shadow .3s}
+.access-card:hover{box-shadow:var(--shadow-md)}
+.access-icon{width:44px;height:44px;background:var(--teal-pale);border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:1.1rem}
+.access-icon svg{width:21px;height:21px;stroke:var(--teal);fill:none;stroke-width:1.7}
+.access-card h4{font-family:var(--font-display);font-size:1.08rem;font-weight:500;margin-bottom:.6rem;color:var(--ink)}
+.access-card p{font-size:.86rem;color:var(--ink-2);line-height:1.7;margin-bottom:1rem;font-weight:300}
+.access-tag{font-family:var(--font-body);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-dark);background:var(--teal-pale);padding:4px 11px;border-radius:100px;display:inline-block}
+
+/* Comparison table */
+.compare-wrap{margin-top:2.75rem;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--white)}
+.compare-row{display:grid;grid-template-columns:2fr 1fr 1fr;align-items:center}
+.compare-row + .compare-row{border-top:1px solid var(--border)}
+.compare-row.head{background:var(--teal-pale)}
+.compare-row.head div{font-family:var(--font-display);font-weight:500;color:var(--teal-dark);font-size:.95rem}
+.compare-row div{padding:1.05rem 1.5rem;font-size:.88rem;color:var(--ink-2)}
+.compare-row .label{font-weight:500;color:var(--ink)}
+.compare-row .pro{background:var(--teal-pale)}
+.check-y{color:var(--teal-dark)}
+.check-n{color:var(--ink-4)}
+
+/* Differentiator grid */
+.diff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-top:2.75rem}
+.diff-card{display:flex;gap:1.25rem;background:var(--off-white);border:1px solid var(--border);border-radius:16px;padding:1.85rem}
+.diff-num{font-family:var(--font-display);font-size:1.8rem;font-weight:500;color:var(--teal-mid);flex-shrink:0}
+.diff-card h4{font-family:var(--font-display);font-size:1.05rem;font-weight:500;margin-bottom:.45rem;color:var(--ink)}
+.diff-card p{font-size:.87rem;color:var(--ink-2);line-height:1.7;font-weight:300}
+
+/* Future / hybrid OR */
+.future-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.future-stats{display:flex;gap:2.5rem;margin-top:1.75rem}
+.future-stats .n{font-family:var(--font-display);font-size:2.2rem;font-weight:500;color:var(--teal-dark)}
+.future-stats .l{font-size:.78rem;color:var(--ink-3)}
+.future-img{border-radius:18px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.future-img img{width:100%;display:block}
+
+/* Mini CTA band */
+.cta-band{background:linear-gradient(135deg,var(--teal) 0%,var(--teal-light) 100%);border-radius:24px;padding:3.5rem 3rem;text-align:center;color:#fff;margin:0 5% 0}
+.cta-band h2{color:#fff;margin-bottom:.75rem}
+.cta-band p{color:rgba(255,255,255,.9);max-width:520px;margin:0 auto 1.75rem;font-weight:300}
+.cta-band .btn-primary{background:#fff;color:var(--teal-dark)}
+.cta-band .btn-outline{border-color:rgba(255,255,255,.5);color:#fff}
+.cta-band .btn-outline:hover{background:rgba(255,255,255,.12)}
+
+@media(max-width:960px){
+  .principle-grid,.future-grid{grid-template-columns:1fr}
+  .flow-grid{grid-template-columns:1fr 1fr}
+  .access-grid,.diff-grid{grid-template-columns:1fr}
+  .compare-row{grid-template-columns:1.4fr 1fr 1fr}
+}
+@media(max-width:600px){.flow-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 20 20"><path d="M10 2C10 2 4 6 4 11C4 14.3 6.7 17 10 17C13.3 17 16 14.3 16 11C16 6 10 2 10 2ZM10 7C11.1 7 12 8.1 12 9.5C12 10.9 11.1 12 10 12C8.9 12 8 10.9 8 9.5C8 8.1 8.9 7 10 7Z"/></svg></div>
+    <span class="logo-name">ThoraTech</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#uses">Applications</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="why-monsoon4.html">Why Monsoon 4</a></li>
+    <li><a href="simulator.html">Try the Panel</a></li>
+    <li><a href="index.html#clinical">Clinical Data</a></li>
+    <li><a href="index.html#contact" class="nav-cta">Request Demo</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <div class="hero-bg"></div>
+  <div class="inner">
+    <div class="sec-label reveal">How It Works</div>
+    <h1 class="reveal d1">An open airway,<br/><em>by design.</em></h1>
+    <p class="reveal d2">Conventional ventilation seals the airway and cycles large tidal volumes. Monsoon 4 takes the opposite approach &mdash; a narrow, high-velocity jet of conditioned gas entrains ambient air around it, delivering effective gas exchange with a tidal volume smaller than the patient&rsquo;s anatomical dead space.</p>
+  </div>
+</section>
+
+<!-- THE JET PRINCIPLE -->
+<section id="principle">
+  <div class="sec-label reveal">The Core Principle</div>
+  <h2 class="reveal d1">From a single jet to<br/>complete gas exchange</h2>
+  <div class="principle-grid" style="margin-top:2.75rem">
+    <div class="principle-visual reveal d2">
+      <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+        <path class="entrain" d="M40,140 C140,80 340,80 440,40"/>
+        <path class="entrain" d="M40,140 C140,200 340,200 440,240"/>
+        <path class="core" d="M40,132 C160,132 320,128 440,138 L440,142 C320,132 160,136 40,136 Z" opacity="0.9"/>
+        <circle class="core" cx="48" cy="140" r="6"/>
+        <text x="60" y="118">CORE JET (CONDITIONED O&#8322;)</text>
+        <text x="290" y="68">ENTRAINED AMBIENT AIR</text>
+        <text x="290" y="232">ENTRAINED AMBIENT AIR</text>
+        <text x="60" y="170">MIXING &amp; DIFFUSION ZONE</text>
+        <line x1="40" y1="150" x2="40" y2="190" stroke="#cbd5e1" stroke-width="1"/>
+        <line x1="120" y1="150" x2="120" y2="190" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="48" y="205">CORE JET RANGE X&#8320;</text>
+      </svg>
+    </div>
+    <ul class="principle-list reveal d3">
+      <li>
+        <div class="pl-num">1</div>
+        <div>
+          <h4>The Jet</h4>
+          <p>A longitudinal, coaxial cone of conditioned oxygen exits the jet catheter at high velocity, creating a low-pressure zone along the core stream.</p>
+        </div>
+      </li>
+      <li>
+        <div class="pl-num">2</div>
+        <div>
+          <h4>Entrainment</h4>
+          <p>That pressure gradient draws ambient air &mdash; or bypass oxygen &mdash; in along the jet&rsquo;s path, multiplying the effective delivered volume without enlarging the airway interface.</p>
+        </div>
+      </li>
+      <li>
+        <div class="pl-num">3</div>
+        <div>
+          <h4>Exchange</h4>
+          <p>Gas exchange continues via Taylor-type dispersion, molecular diffusion, and facilitated diffusion &mdash; efficient even with tidal volumes below anatomical dead space.</p>
+        </div>
+      </li>
+      <li>
+        <div class="pl-num">4</div>
+        <div>
+          <h4>Plug-and-Play Integration</h4>
+          <p>Air/oxygen blending, heated humidification, and live monitoring arrive pre-integrated &mdash; designed to drop into existing OR workflows without retraining.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ACCESS METHODS -->
+<section id="access" style="background:var(--off-white)">
+  <div class="sec-label reveal">Access Strategies</div>
+  <h2 class="reveal d1">One ventilator,<br/>three ways into the airway</h2>
+  <p class="sec-intro reveal d2">Monsoon 4 supports the access techniques surgical teams already plan around &mdash; each suited to a different procedure type, airway status, and instrumentation need.</p>
+  <div class="access-grid">
+    <div class="access-card reveal d1">
+      <div class="access-icon"><svg viewBox="0 0 24 24"><path d="M4 12h6l2-4 4 8 2-4h2"/></svg></div>
+      <h4>Supraglottic Jet Ventilation</h4>
+      <p>A fine jet catheter runs through the laryngoscopy tube, its nozzle ending 3&ndash;4&nbsp;cm from the tip &mdash; keeping the airway largely open for instrumentation and visualization.</p>
+      <span class="access-tag">Laryngoscopy-based ENT</span>
+    </div>
+    <div class="access-card reveal d2">
+      <div class="access-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
+      <h4>Infraglottic Jet Ventilation</h4>
+      <p>A narrow catheter with a central aperture and side ports delivers gas just below the glottis. Side wings secure to the neck; a Luer-Lock connector seats firmly into Monsoon 4.</p>
+      <span class="access-tag">Tumours &amp; difficult airways</span>
+    </div>
+    <div class="access-card reveal d3">
+      <div class="access-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h2M7 14h6"/></svg></div>
+      <h4>Superimposed Jet Ventilation</h4>
+      <p>Monsoon 4 runs alongside a conventional ventilator via a jet adapter in place of the standard Y-piece &mdash; pulsing through both phases of the mandatory breath.</p>
+      <span class="access-tag">Combined conventional + jet</span>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow">
+  <div class="sec-label reveal">From Crate to Case-Ready</div>
+  <h2 class="reveal d1">A workflow built to be<br/>learned once, trusted every time</h2>
+  <p class="sec-intro reveal d2">Monsoon 4&rsquo;s setup and shutdown sequences are designed for plug-and-play operation &mdash; with or without active humidification.</p>
+  <div class="flow-grid">
+    <div class="flow-step reveal d1">
+      <div class="num">01</div>
+      <h4>Connect &amp; power on</h4>
+      <p>Link gas supplies, mains power, and the patient circuit. The 15&Prime; ThoraDis touchscreen guides setup &mdash; no hidden menus.</p>
+      <svg class="flow-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </div>
+    <div class="flow-step reveal d2">
+      <div class="num">02</div>
+      <h4>Select configuration</h4>
+      <p>Choose single or dual-jet mode, set frequency, inspiration timing, and pressure limits for the case at hand.</p>
+      <svg class="flow-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </div>
+    <div class="flow-step reveal d3">
+      <div class="num">03</div>
+      <h4>Add humidification</h4>
+      <p>Engage the integrated heater/humidifier for longer cases requiring active conditioning of delivered gas.</p>
+      <svg class="flow-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </div>
+    <div class="flow-step reveal d3">
+      <div class="num">04</div>
+      <h4>Monitor &amp; shut down</h4>
+      <p>Live pressure, flow, and volume monitoring throughout the case, followed by a guided shutdown sequence.</p>
+    </div>
+  </div>
+</section>
+
+<!-- IN THE OR -->
+<section id="inor" style="background:var(--off-white)">
+  <div class="future-grid">
+    <div class="reveal d1">
+      <div class="sec-label">In the Operating Room</div>
+      <h2>Designed to disappear<br/>into the workflow</h2>
+      <p style="font-size:.96rem;color:var(--ink-2);line-height:1.8;font-weight:300;margin-top:1rem">
+        The same display language clinicians already trust &mdash; live jet pressures, frequencies, I:E ratios, SpO&#8322; and etCO&#8322; &mdash; surfaces on the 15&Prime; ThoraDis screen and any connected theatre monitor, so the anaesthesia team always has the full picture without leaving the sterile field.
+      </p>
+      <div class="future-stats">
+        <div><div class="n">&#8595;</div><div class="l">Patient movement during critical steps</div></div>
+        <div><div class="n">&#8593;</div><div class="l">Procedural confidence &amp; throughput</div></div>
+      </div>
+    </div>
+    <div class="future-img reveal d2">
+      <img src="images/embedded-6.webp" loading="lazy" alt="Monsoon 4 console with live monitoring in theatre"/>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding-top:0">
+  <div class="cta-band reveal">
+    <h2>See the principle in your OR.</h2>
+    <p>Talk to our clinical team about a demonstration tailored to your facility&rsquo;s procedure mix.</p>
+    <div class="actions" style="justify-content:center">
+      <a href="index.html#contact" class="btn-primary">Request Clinical Demo</a>
+      <a href="simulator.html" class="btn-outline">Try the Control Panel &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-logo">ThoraTech Medical GmbH</div>
+    <div class="footer-links">
+      <a href="index.html#uses">Products</a><a href="index.html#clinical">Clinical Data</a><a href="simulator.html">Try the Panel</a>
+      <a href="how-it-works.html">How It Works</a><a href="why-monsoon4.html">Why Monsoon 4</a>
+      <a href="monsoon-4-instructions-for-use.pdf" target="_blank" rel="noopener">Instructions for Use (PDF)</a><a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+  <p class="footer-copy">© 2025 Thora Tech Medical GmbH · Gießen, Germany · ISO 13485 Certified · MDR CE Mark · For Healthcare Professionals Only</p>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.12});
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Viewer toggle — img3=full system, img4=internal engineering
+const viewerSrcs = [
+  "images/embedded-10.webp",
+  "images/embedded-11.webp"
+];
+function setViewer(idx) {
+  const el = document.getElementById('viewer-img');
+  el.style.opacity = '0'; el.style.transform = 'scale(0.97)';
+  setTimeout(() => {
+    el.src = viewerSrcs[idx];
+    el.style.opacity = '1'; el.style.transform = 'scale(1)';
+  }, 220);
+  document.querySelectorAll('.vbtn').forEach((b,i) => b.classList.toggle('active', i===idx));
+}
+</script>
+</body>
+</html>
