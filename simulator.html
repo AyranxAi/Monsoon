@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monsoon 4 DoubleJet — Digital Twin (GLB body + live HMI)</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#e9ecec;font-family:system-ui,sans-serif;}
+  #app{position:fixed;inset:0;}
+  #webgl{position:absolute;inset:0;z-index:1;}
+  /* CSS3D layer is click-through by default; the overlay iframe re-enables itself
+     so its buttons/chevrons work and empty-panel clicks fall through to the canvas. */
+  #css3d{position:absolute;inset:0;z-index:2;pointer-events:none;}
+  #css3d iframe{border:0;background:transparent;pointer-events:auto;}
+
+  .badge{position:fixed;right:12px;top:12px;z-index:5;color:#37494f;font-size:12px;letter-spacing:.04em;
+        background:rgba(255,255,255,.82);padding:5px 10px;border-radius:7px;pointer-events:none;}
+  .hint{position:fixed;left:12px;bottom:12px;z-index:5;color:#445;font-size:13px;
+        background:rgba(255,255,255,.82);padding:6px 11px;border-radius:8px;pointer-events:none;}
+  #dbg{position:fixed;left:12px;top:12px;z-index:5;color:#0a3;font:12px ui-monospace,monospace;
+        background:rgba(255,255,255,.85);padding:6px 10px;border-radius:7px;white-space:pre;pointer-events:none;}
+
+  /* preset view buttons */
+  #views{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;display:flex;gap:8px;}
+  #views button{font:13px system-ui,sans-serif;color:#2a3b40;background:rgba(255,255,255,.9);
+        border:1px solid #c4cccd;border-radius:8px;padding:7px 14px;cursor:pointer;
+        box-shadow:0 1px 3px rgba(0,0,0,.08);transition:background .15s,border-color .15s;}
+  #views button:hover{background:#fff;border-color:#9fb6bb;}
+  #views button.active{background:#13827522;border-color:#138275;color:#0d5f55;font-weight:600;}
+</style>
+</head>
+<body>
+<div id="app"><div id="webgl"></div><div id="css3d"></div></div>
+<div class="badge">Monsoon 4 · DoubleJet — Digital Twin</div>
+<div class="hint">Drag empty space to orbit · scroll to zoom · click the buttons / chevrons · tap the knob</div>
+<div id="dbg">loading…</div>
+<div id="views">
+  <button data-view="front">Front</button>
+  <button data-view="tq">3-Quarter</button>
+  <button data-view="ports">Gas Ports</button>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls }              from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader }                 from 'three/addons/loaders/GLTFLoader.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DoubleJet digital twin — "mask with the HTML".
+   • 3D (WebGL): the GLB body + matte bezel (SCREEN_panel) + grey screen rect
+     (SCREEN_display) + the user's hand-made dome Knob.
+   • HTML (CSS3D): monsoon4_doublejet_overlay.html mapped 1:1 onto the content
+     frame so the live screen lands on SCREEN_display, the flat buttons + ‹ ›
+     chevrons land at their HMI %, and the hidden HTML knob's tap handler is
+     driven by the 3D Knob via postMessage.
+   The master monsoon4_doublejet.html stays untouched & fully editable.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const GLB        = 'monsoon4_doublejet.glb?t=' + Date.now();   // cache-bust re-exports
+const OVERLAY    = 'monsoon4_doublejet_overlay.html';
+const HMI_W_PX   = 1902.1, HMI_H_PX = 1084.5;   // HMI reference pixel size (aspect 1.754)
+const PWc        = 0.2608, PHc = 0.1487;        // content-frame size in metres (== full HMI rect)
+const PX2M       = PWc / HMI_W_PX;              // exact px→world scale (== PHc/HMI_H_PX)
+const SURF_OFF   = 0.0016;                       // push the overlay just in front of the panel face
+
+const dbg = document.getElementById('dbg');
+const log = (...a)=>console.log('[djtwin]', ...a);
+
+/* ── WebGL renderer (flat, matte, no harsh glare — medical, glare-sensitive user) ── */
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById('webgl').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe9ecec);
+
+const camera = new THREE.PerspectiveCamera(34, innerWidth/innerHeight, 0.01, 100);
+
+/* ── soft, flat lighting: hemisphere + two gentle directionals, no specular blowout ── */
+scene.add(new THREE.HemisphereLight(0xffffff, 0x97a1a3, 0.95));
+const key = new THREE.DirectionalLight(0xffffff, 0.55); key.position.set(0.5, 1.2, 0.9); scene.add(key);
+const fill= new THREE.DirectionalLight(0xffffff, 0.22); fill.position.set(-0.7, 0.5, -0.4); scene.add(fill);
+
+/* ── LIMITED orbit (can't flip under; screen stays readable) ── */
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.enablePan = false;
+controls.minDistance = 0.30; controls.maxDistance = 1.6;
+controls.minPolarAngle = THREE.MathUtils.degToRad(28);
+controls.maxPolarAngle = THREE.MathUtils.degToRad(90);
+
+/* ── CSS3D renderer (overlay layer) ── */
+const css3d = new CSS3DRenderer(); css3d.setSize(innerWidth, innerHeight);
+document.getElementById('css3d').appendChild(css3d.domElement);
+css3d.domElement.style.pointerEvents = 'none';
+
+/* ── preset views: animate azimuth°/polar°/distance about the target ── */
+let target = new THREE.Vector3(0, 0.20, 0.12);
+const VIEWS = {
+  front: [   0, 66, 0.62 ],   // straight front, slightly above — reads the screen
+  tq:    [ -32, 60, 0.66 ],   // three-quarter
+  ports: [   6, 84, 0.50 ],   // low & close on the gas-connector row
+};
+let camAnim = null;
+function setView(name, instant){
+  const v = VIEWS[name] || VIEWS.front;
+  const a = THREE.MathUtils.degToRad(v[0]), p = THREE.MathUtils.degToRad(v[1]), d = v[2];
+  const dest = new THREE.Vector3(
+    target.x + d*Math.sin(p)*Math.sin(a),
+    target.y + d*Math.cos(p),
+    target.z + d*Math.sin(p)*Math.cos(a)
+  );
+  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  if(instant){ camera.position.copy(dest); controls.update(); return; }
+  camAnim = { from: camera.position.clone(), to: dest, t: 0 };
+}
+document.querySelectorAll('#views button').forEach(b=>{
+  b.addEventListener('click', ()=> setView(b.dataset.view));
+});
+
+/* ── load the GLB body ── */
+window.__THREE = THREE; window.__scene = scene; window.__camera = camera; window.__controls = controls; window.__renderer = renderer;
+window.__frame = ()=>{ controls.update(); renderer.render(scene, camera); css3d.render(scene, camera); };   // debug: force one frame
+const pickables = [];                 // only the 3D Knob is raycast (buttons/chevrons are HTML)
+let knobNode = null;
+
+new GLTFLoader().load(GLB, (gltf)=>{
+  const model = gltf.scene; window.__model = model;
+  const named = {};
+  model.traverse(o=>{
+    if(o.name) named[o.name] = o;
+    if(o.isMesh && o.material){ o.material.envMapIntensity = 0.4; o.material.needsUpdate = true; }
+  });
+  window.__named = named;
+  scene.add(model);
+
+  // the BTN_* meshes are HTML hit-proxies only → keep them out of the WebGL render
+  ['BTN_jet','BTN_laser','BTN_mode'].forEach(n=>{ if(named[n]) named[n].visible = false; });
+
+  // frame on the model
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
+  target.copy(center); controls.target.copy(center);
+
+  /* ── place the live HMI overlay on the content frame via SCREEN_anchor ── */
+  const anchor = named['SCREEN_anchor'];
+  if(anchor){
+    anchor.updateWorldMatrix(true, false);
+    const aPos = anchor.getWorldPosition(new THREE.Vector3());
+    const aQuat = anchor.getWorldQuaternion(new THREE.Quaternion());
+    // anchor maps local +Y → panel normal; a CSS3D plane's normal is local +Z.
+    // Rotate −90° about X so the iframe (XY plane, +Z out) faces along the rake normal,
+    // with HMI-up → up-the-rake and HMI-right → world +X.
+    const corr = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2);
+    const oQuat = aQuat.clone().multiply(corr);
+    const normal = new THREE.Vector3(0,0,1).applyQuaternion(oQuat).normalize();
+
+    const iframe = document.createElement('iframe');
+    iframe.src = OVERLAY + '?t=' + Date.now();   // cache-bust so overlay edits load fresh
+    iframe.style.width = HMI_W_PX + 'px';
+    iframe.style.height = HMI_H_PX + 'px';
+    iframe.setAttribute('allowtransparency', 'true');
+    iframe.addEventListener('load', ()=>{ hmiWin = iframe.contentWindow; });
+
+    const obj = new CSS3DObject(iframe);
+    obj.scale.setScalar(PX2M);
+    obj.position.copy(aPos).addScaledVector(normal, SURF_OFF);
+    obj.quaternion.copy(oQuat);
+    scene.add(obj);
+    window.__overlay = obj;
+    log('OVERLAY anchor', aPos.toArray().map(v=>+v.toFixed(4)), 'normal', normal.toArray().map(v=>+v.toFixed(3)));
+  } else {
+    log('WARN: SCREEN_anchor not found — overlay not placed');
+  }
+
+  // the 3D dome knob is raycast for TAP
+  knobNode = named['Knob'];
+  if(knobNode){ knobNode.traverse(o=>{ if(o.isMesh){ o.userData.kind='knob'; pickables.push(o); } }); }
+
+  /* ── 3D turn chevrons ‹ › flanking the PROTRUDING knob (replace the flat HTML ones) ──
+     click → raycast → postMessage 'turn' → overlay bridge clicks the hidden HTML chevron. */
+  if(knobNode){
+    const kp = knobNode.getWorldPosition(new THREE.Vector3());
+    const kq = knobNode.getWorldQuaternion(new THREE.Quaternion());
+    // same +Z-normal correction as the iframe, so the chevrons lie in the panel plane
+    const cQuat = kq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2));
+    const nrm = new THREE.Vector3(0,0,1).applyQuaternion(cQuat).normalize();
+    const rgt = new THREE.Vector3(1,0,0).applyQuaternion(cQuat).normalize();
+    const knobMid = kp.clone().addScaledVector(nrm, 0.0145);   // mid-height of the dome bulge
+    const chevMat = new THREE.MeshStandardMaterial({ color:0x3fb4e0, roughness:0.45, emissive:0x2ba6d6, emissiveIntensity:0.4 });
+    function makeChevron(dir){            // dir -1 = ‹ (left), +1 = › (right)
+      const g = new THREE.Group();
+      const L = 0.006, th = 0.0035, len = L*1.7;
+      const a1 = new THREE.Mesh(new THREE.BoxGeometry(len, th, th), chevMat);
+      a1.position.set(-dir*L*0.5,  L*0.5, 0); a1.rotation.z = -dir*Math.PI/4; g.add(a1);
+      const a2 = new THREE.Mesh(new THREE.BoxGeometry(len, th, th), chevMat);
+      a2.position.set(-dir*L*0.5, -L*0.5, 0); a2.rotation.z =  dir*Math.PI/4; g.add(a2);
+      const hit = new THREE.Mesh(new THREE.CircleGeometry(L*2.2, 18), new THREE.MeshBasicMaterial({ visible:false }));
+      hit.position.z = 0.001; hit.userData = { kind:'turn', dir }; g.add(hit); pickables.push(hit);
+      return g;
+    }
+    [-1, 1].forEach(dir=>{
+      const c = makeChevron(dir);
+      c.quaternion.copy(cQuat);
+      c.position.copy(knobMid).addScaledVector(rgt, dir*0.034).addScaledVector(nrm, 0.003);
+      scene.add(c);
+    });
+  }
+
+  const startView = new URLSearchParams(location.search).get('view');
+  setView((startView && VIEWS[startView]) ? startView : 'front', true);
+  window.setView = setView;
+
+  const report = {
+    nodes: Object.keys(named).length,
+    size: size.toArray().map(v=>+v.toFixed(4)),
+    anchor: named['SCREEN_anchor'] ? named['SCREEN_anchor'].getWorldPosition(new THREE.Vector3()).toArray().map(v=>+v.toFixed(4)) : null,
+    knob: knobNode ? knobNode.getWorldPosition(new THREE.Vector3()).toArray().map(v=>+v.toFixed(4)) : null,
+  };
+  log('GEOMETRY', JSON.stringify(report));
+  dbg.textContent =
+    `loaded ✓  nodes:${report.nodes}\n`+
+    `size(m): ${report.size.join(', ')}\n`+
+    `knob:    ${report.knob ? report.knob.join(', ') : '—'}`;
+}, undefined, (err)=>{
+  log('LOAD ERROR', err);
+  dbg.textContent = 'LOAD ERROR: ' + (err && err.message ? err.message : err);
+});
+
+/* ── raycast controls: knob TAP (no drag → orbit), chevron CLICK → turn → postMessage ── */
+let hmiWin = null;
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+let knobDown = null, turning = false;
+function hmiSend(act, extra){ if(hmiWin) hmiWin.postMessage(Object.assign({ ch:'ms4', act }, extra||{}), '*'); }
+function pick(ev){
+  if(!pickables.length) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.x = ((ev.clientX - r.left)/r.width)*2 - 1;
+  ndc.y = -((ev.clientY - r.top)/r.height)*2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects(pickables, false);
+  return hits.length ? hits[0].object : null;
+}
+function spinKnob(dir){ if(knobNode) knobNode.rotateOnAxis(new THREE.Vector3(0,1,0), -dir*0.26); }
+renderer.domElement.addEventListener('pointerdown', ev=>{
+  knobDown = null; turning = false;
+  const o = pick(ev); if(!o) return;
+  const u = o.userData;
+  if(u.kind === 'turn'){
+    turning = true; controls.enabled = false;          // a turn-click must not orbit
+    hmiSend('turn', { dir:u.dir }); spinKnob(u.dir);
+  } else if(u.kind === 'knob'){
+    knobDown = { x:ev.clientX, y:ev.clientY };          // decide tap vs drag on pointerup
+  }
+});
+addEventListener('pointerup', ev=>{
+  if(turning){ controls.enabled = true; turning = false; }
+  if(knobDown){
+    const moved = Math.hypot(ev.clientX - knobDown.x, ev.clientY - knobDown.y);
+    if(moved < 6) hmiSend('tap', { id:'knob' });        // a click, not a drag → tap the knob
+    knobDown = null;
+  }
+});
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); css3d.setSize(innerWidth, innerHeight);
+});
+(function tick(){
+  if(camAnim){
+    camAnim.t = Math.min(1, camAnim.t + 0.045);
+    const k = camAnim.t<.5 ? 2*camAnim.t*camAnim.t : 1-Math.pow(-2*camAnim.t+2,2)/2; // easeInOutQuad
+    camera.position.lerpVectors(camAnim.from, camAnim.to, k);
+    if(camAnim.t >= 1) camAnim = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  css3d.render(scene, camera);
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
