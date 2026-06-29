@@ -278,6 +278,12 @@ addEventListener('pointerup', ev=>{
     // decide tap vs drag: if moved < 6px, it's a tap
     if(moved < 6) {
       hmiSend('tap', { id: 'knob' });
+      // visual feedback: simple scale pulse
+      if(knobNode) {
+        const orig = knobNode.scale.clone();
+        knobNode.scale.multiplyScalar(0.95);
+        setTimeout(() => knobNode.scale.copy(orig), 100);
+      }
     }
     knobDown = null;
   }
