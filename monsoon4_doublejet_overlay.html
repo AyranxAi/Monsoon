@@ -215,9 +215,11 @@ body {
   font-family: system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: 0.03em;
-  cursor: default;
-  pointer-events: none;          /* prompt only — proceed via the knob, not a click */
+  cursor: pointer;
+  pointer-events: auto;          /* tappable on touchscreen — same as pressing the knob */
   outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Box 4 — footer (same gray) */
@@ -1017,6 +1019,8 @@ body {
   justify-content: center;
   user-select: none;
   transition: box-shadow 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Ring buttons — measured teal-green border (NOT bright cyan) */
@@ -1026,6 +1030,9 @@ body {
   /* dark gap between ring and everything */
   outline: 4px solid #0c0c0c;
   transition: box-shadow 0.2s, background 0.1s;
+  touch-action: manipulation;          /* kills 300ms tap delay on touch devices */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .ring-btn:hover {
@@ -1283,6 +1290,7 @@ body {
   transition: opacity 0.25s ease;
   z-index: 6;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 #kt-left  { right: 19.5%; }
 #kt-right { right: 1%; }
@@ -2432,6 +2440,12 @@ body {
     if (!onDash) return;                              // mute is a dashboard/status feature
     setMute(!muted);
   });
+  alarmBtn.addEventListener('touchstart', function(e) {   // explicit touch — no 300ms wait
+    e.preventDefault();
+    flashBtn(this);
+    if (!onDash) return;
+    setMute(!muted);
+  }, { passive: false });
 
   // ③ LASER — hold 1s to activate LASER mode (O2 is reduced to the laser limit).
   let laserTimer = null;
@@ -2615,6 +2629,20 @@ body {
     tap('kt-right', () => knobTurn(1));
   })();
 
+  // CONTINUE BUTTON — tappable on touchscreen (same as pressing the knob after self-test)
+  (function () {
+    const continueBtn = document.getElementById('st-continue');
+    if (!continueBtn) return;
+    function doAdvance() {
+      if (selftestDone && !onPreset) advanceToPreset();
+    }
+    continueBtn.addEventListener('click', doAdvance);
+    continueBtn.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      doAdvance();
+    }, { passive: false });
+  })();
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -2642,9 +2670,20 @@ body {
     pointer-events: none !important;   /* empty-panel clicks fall through to the 3D (orbit + knob raycast) */
   }
 
-  /* the 3D dome knob replaces the HTML knob; the ‹ › chevrons are now 3D too
-     (flanking the protruding knob) — kept in the DOM (hidden) so the bridge can click them */
-  #knob, .kt-chev { display: none !important; }
+  /* the 3D dome knob replaces the HTML knob; the ‹ › chevrons are shown in HTML
+     so touch users can tap them directly (3D raycast chevrons stay too, but the
+     HTML ones are more reliable on touch since they're real DOM elements) */
+  #knob { display: none !important; }
+
+  /* chevrons: always visible in touch context, pointer-events on */
+  .kt-chev {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    display: flex !important;
+    width: 6% !important;
+    min-width: 34px !important;
+    font-size: 3.2vw !important;
+  }
 
   /* keep the flat buttons directly clickable in the overlay */
   .ring-btn { pointer-events: auto !important; }
@@ -2662,15 +2701,21 @@ body {
   function fire(el, type) { if (el) el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true })); }
   window.addEventListener('message', function (e) {
     var m = e.data; if (!m || m.ch !== 'ms4') return;
-    if (m.act === 'turn') {                       // optional: 3D-routed turn
-      var c = document.getElementById(m.dir > 0 ? 'kt-right' : 'kt-left');
-      if (c) c.click();
+    if (m.act === 'turn') {
+      // route 3D turn messages to the knobTurn function
+      knobTurn(m.dir);
       return;
     }
-    var el = document.getElementById(m.id); if (!el) return;
+    var el = document.getElementById(m.id);
+    if (!el) return;
     if (m.act === 'down')      { fire(el, 'mousedown'); }
     else if (m.act === 'up')   { fire(el, 'mouseup'); fire(el, 'click'); }
-    else if (m.act === 'tap')  { fire(el, 'mousedown'); fire(el, 'mouseup'); fire(el, 'click'); }
+    else if (m.act === 'tap')  { 
+      // Ensure visual feedback on the knob element if it's not hidden
+      fire(el, 'mousedown'); 
+      fire(el, 'mouseup'); 
+      fire(el, 'click'); 
+    }
   });
 })();
 </script>

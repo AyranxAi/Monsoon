@@ -183,7 +183,15 @@ new GLTFLoader().load(GLB, (gltf)=>{
 
   // the 3D dome knob is raycast for TAP
   knobNode = named['Knob'];
-  if(knobNode){ knobNode.traverse(o=>{ if(o.isMesh){ o.userData.kind='knob'; pickables.push(o); } }); }
+  if(knobNode){ 
+    knobNode.traverse(o=>{ 
+      if(o.isMesh){ 
+        o.userData.kind='knob'; 
+        o.userData.id='knob'; // ensure the ID matches the HTML element
+        pickables.push(o); 
+      } 
+    }); 
+  }
 
   /* ── 3D turn chevrons ‹ › flanking the PROTRUDING knob (replace the flat HTML ones) ──
      click → raycast → postMessage 'turn' → overlay bridge clicks the hidden HTML chevron. */
@@ -257,7 +265,8 @@ renderer.domElement.addEventListener('pointerdown', ev=>{
   const u = o.userData;
   if(u.kind === 'turn'){
     turning = true; controls.enabled = false;          // a turn-click must not orbit
-    hmiSend('turn', { dir:u.dir }); spinKnob(u.dir);
+    hmiSend('turn', { dir:u.dir }); 
+    spinKnob(u.dir);
   } else if(u.kind === 'knob'){
     knobDown = { x:ev.clientX, y:ev.clientY };          // decide tap vs drag on pointerup
   }
@@ -266,7 +275,10 @@ addEventListener('pointerup', ev=>{
   if(turning){ controls.enabled = true; turning = false; }
   if(knobDown){
     const moved = Math.hypot(ev.clientX - knobDown.x, ev.clientY - knobDown.y);
-    if(moved < 6) hmiSend('tap', { id:'knob' });        // a click, not a drag → tap the knob
+    // decide tap vs drag: if moved < 6px, it's a tap
+    if(moved < 6) {
+      hmiSend('tap', { id: 'knob' });
+    }
     knobDown = null;
   }
 });
