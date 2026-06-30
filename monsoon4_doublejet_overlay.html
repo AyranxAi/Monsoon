@@ -1304,8 +1304,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-#kt-left  { right: 19.5%; }
-#kt-right { right: 1%; }
+#kt-left  { right: 21.5%; }
+#kt-right { right: -1%; }
 #knob:hover ~ .kt-chev,
 .kt-chev:hover { opacity: 1; }
 @media (hover: none) and (pointer: coarse) {
@@ -2766,11 +2766,16 @@ body {
   }
 
   /* the 3D dome knob replaces the HTML knob; the ‹ › chevrons are shown in HTML
-     so touch users can tap them directly (3D raycast chevrons stay too, but the
-     HTML ones are more reliable on touch since they're real DOM elements) */
+     so touch users can tap them directly (the 3D mesh chevrons were removed —
+     these flat HTML ones are the only turn control now) */
   #knob { display: none !important; }
 
-  /* chevrons: always visible in touch context, pointer-events on */
+  /* chevrons: always visible in touch context, pointer-events on.
+     Position is recentred on the REAL 3D knob's centre, computed directly from
+     the GLB's SCREEN_anchor + Knob node transforms (the old base bottom:13% /
+     right:19.5%|1% values were tuned around the flat #knob graphic, which sits
+     about 23px off from where the actual 3D knob is) — overridden here, in 3D
+     mode only, so standalone (non-3D) mode is untouched. */
   .kt-chev {
     pointer-events: auto !important;
     opacity: 1 !important;
@@ -2778,7 +2783,10 @@ body {
     width: 6% !important;
     min-width: 34px !important;
     font-size: 3.2vw !important;
+    bottom: 11.249% !important;
   }
+  #kt-left  { right: 15.535% !important; }
+  #kt-right { right: 0.814%  !important; }
 
   /* keep the flat buttons directly clickable in the overlay */
   .ring-btn { pointer-events: auto !important; -webkit-user-select: none; user-select: none;  pointer-events: auto !important; }
