@@ -12,9 +12,10 @@
   #app{position:fixed;inset:0;}
   /* touch-action:none on the canvas prevents the browser from intercepting
      touch events for scroll/zoom, ensuring our pointer events always fire */
-  #webgl{position:absolute;inset:0;z-index:2;touch-action:none;}
-  /* CSS3D layer is behind the WebGL canvas for occlusion masking */
-  #css3d{position:absolute;inset:0;z-index:1;pointer-events:none; touch-action:none;}
+  #webgl{position:absolute;inset:0;z-index:1;touch-action:none;}
+  /* CSS3D layer is click-through by default; the overlay iframe re-enables itself
+     so its buttons/chevrons work and empty-panel clicks fall through to the canvas. */
+  #css3d{position:absolute;inset:0;z-index:2;pointer-events:none; touch-action:none;}
   #css3d iframe{border:0;background:transparent;pointer-events:auto;}
 
   .badge{position:fixed;right:12px;top:12px;z-index:5;color:#37494f;font-size:12px;letter-spacing:.04em;
@@ -114,13 +115,10 @@ controls.minDistance = 0.30; controls.maxDistance = 1.6;
 controls.minPolarAngle = THREE.MathUtils.degToRad(28);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(90);
 
-  /* ── CSS3D renderer (overlay layer) ── */
-  const css3d = new CSS3DRenderer(); css3d.setSize(innerWidth, innerHeight);
-  document.getElementById('css3d').appendChild(css3d.domElement);
-  css3d.domElement.style.pointerEvents = 'none';
-  /* CRITICAL for occlusion: the CSS3D layer must be BEHIND the WebGL layer.
-     We then use a depth-masking technique in WebGL to let it show through. */
-  renderer.setClearColor(0x000000, 0); // Ensure WebGL canvas is transparent
+/* ── CSS3D renderer (overlay layer) ── */
+const css3d = new CSS3DRenderer(); css3d.setSize(innerWidth, innerHeight);
+document.getElementById('css3d').appendChild(css3d.domElement);
+css3d.domElement.style.pointerEvents = 'none';
 
 /* ── preset views: animate azimuth°/polar°/distance about the target ── */
 let target = new THREE.Vector3(0, 0.20, 0.12);
@@ -199,43 +197,23 @@ new GLTFLoader().load(GLB, (gltf)=>{
     obj.quaternion.copy(oQuat);
     scene.add(obj);
     window.__overlay = obj;
-
-    /* ── OCCLUSION MASK (Priority 4) ──
-       We create a WebGL mesh that matches the CSS3D object's size and position.
-       By setting colorWrite: false, it won't render any color, but it WILL
-       write to the depth buffer. This effectively "punches a hole" in the
-       3D scene where the HTML should be, allowing the CSS3D renderer (which
-       is behind the WebGL canvas) to show through, while ensuring that
-       any 3D objects in front of this mask correctly block the HTML. */
-    const maskGeom = new THREE.PlaneGeometry(HMI_W_PX * PX2M, HMI_H_PX * PX2M);
-    const maskMat  = new THREE.MeshBasicMaterial({ colorWrite: false });
-    const maskMesh = new THREE.Mesh(maskGeom, maskMat);
-    maskMesh.position.copy(obj.position);
-    maskMesh.quaternion.copy(obj.quaternion);
-    scene.add(maskMesh);
-
     log('OVERLAY anchor', aPos.toArray().map(v=>+v.toFixed(4)), 'normal', normal.toArray().map(v=>+v.toFixed(3)));
   } else {
     log('WARN: SCREEN_anchor not found — overlay not placed');
   }
 
-	  // the 3D dome knob is raycast for TAP
-	  knobNode = named['Knob'];
-	  if(knobNode){ 
-	    knobBaseScale.copy(knobNode.scale);   // remember whatever scale the GLB actually has, uniform or not
-	    knobNode.traverse(o=>{ 
-	      if(o.isMesh){ 
-	        o.userData.kind='knob'; 
-	        o.userData.id='knob'; // ensure the ID matches the HTML element
-	        pickables.push(o); 
-	        // Store original material color for hover effect
-	        if (o.material) {
-	          o.userData.originalColor = o.material.color.clone();
-	          o.userData.hoverColor = o.material.color.clone().multiplyScalar(1.2);
-	        }
-	      } 
-	    }); 
-	  }
+  // the 3D dome knob is raycast for TAP
+  knobNode = named['Knob'];
+  if(knobNode){ 
+    knobBaseScale.copy(knobNode.scale);   // remember whatever scale the GLB actually has, uniform or not
+    knobNode.traverse(o=>{ 
+      if(o.isMesh){ 
+        o.userData.kind='knob'; 
+        o.userData.id='knob'; // ensure the ID matches the HTML element
+        pickables.push(o); 
+      } 
+    }); 
+  }
 
   /* 3D turn chevrons were removed by request (visual preference) — the knob
      itself is still the only thing raycast; pickables now only ever
@@ -463,11 +441,6 @@ window.addEventListener('pointercancel', ()=>{
   controls.enabled = true;
   knobDown = null;
   turning  = false;
-  if (lastHovered) {
-    if (lastHovered.material) lastHovered.material.color.copy(lastHovered.userData.originalColor);
-    lastHovered = null;
-    renderer.domElement.style.cursor = '';
-  }
 });
 
 addEventListener('resize', ()=>{
