@@ -41,6 +41,11 @@
 </style>
 </head>
 <body>
+<!-- DIAGNOSTIC: eruda gives a mobile-friendly DevTools console (Console/Elements/Network)
+     directly on-page, no F12 / no second computer needed. Tap the floating circle button
+     bottom-right to open it. Remove this script tag once debugging is done. -->
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
 <div id="app"><div id="webgl"></div><div id="css3d"></div></div>
 <div class="badge">Monsoon 4 · DoubleJet — Digital Twin</div>
 <div class="hint">Drag empty space to orbit · scroll to zoom · click the buttons / chevrons · tap the knob</div>
@@ -144,8 +149,10 @@ window.__THREE = THREE; window.__scene = scene; window.__camera = camera; window
 window.__frame = ()=>{ controls.update(); renderer.render(scene, camera); css3d.render(scene, camera); };   // debug: force one frame
 const pickables = [];                 // only the 3D Knob is raycast (buttons/chevrons are HTML)
 let knobNode = null;
+let knobBaseScale = new THREE.Vector3(1,1,1);   // captured once GLB loads — animation multiplies THIS, never overwrites it
 
 new GLTFLoader().load(GLB, (gltf)=>{
+ try {
   const model = gltf.scene; window.__model = model;
   const named = {};
   model.traverse(o=>{
@@ -198,6 +205,7 @@ new GLTFLoader().load(GLB, (gltf)=>{
   // the 3D dome knob is raycast for TAP
   knobNode = named['Knob'];
   if(knobNode){ 
+    knobBaseScale.copy(knobNode.scale);   // remember whatever scale the GLB actually has, uniform or not
     knobNode.traverse(o=>{ 
       if(o.isMesh){ 
         o.userData.kind='knob'; 
@@ -207,35 +215,11 @@ new GLTFLoader().load(GLB, (gltf)=>{
     }); 
   }
 
-  /* ── 3D turn chevrons ‹ › flanking the PROTRUDING knob (replace the flat HTML ones) ──
-     click → raycast → postMessage 'turn' → overlay bridge clicks the hidden HTML chevron. */
-  if(knobNode){
-    const kp = knobNode.getWorldPosition(new THREE.Vector3());
-    const kq = knobNode.getWorldQuaternion(new THREE.Quaternion());
-    // same +Z-normal correction as the iframe, so the chevrons lie in the panel plane
-    const cQuat = kq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2));
-    const nrm = new THREE.Vector3(0,0,1).applyQuaternion(cQuat).normalize();
-    const rgt = new THREE.Vector3(1,0,0).applyQuaternion(cQuat).normalize();
-    const knobMid = kp.clone().addScaledVector(nrm, 0.0145);   // mid-height of the dome bulge
-    const chevMat = new THREE.MeshStandardMaterial({ color:0x3fb4e0, roughness:0.45, emissive:0x2ba6d6, emissiveIntensity:0.4 });
-    function makeChevron(dir){            // dir -1 = ‹ (left), +1 = › (right)
-      const g = new THREE.Group();
-      const L = 0.006, th = 0.0035, len = L*1.7;
-      const a1 = new THREE.Mesh(new THREE.BoxGeometry(len, th, th), chevMat);
-      a1.position.set(-dir*L*0.5,  L*0.5, 0); a1.rotation.z = -dir*Math.PI/4; g.add(a1);
-      const a2 = new THREE.Mesh(new THREE.BoxGeometry(len, th, th), chevMat);
-      a2.position.set(-dir*L*0.5, -L*0.5, 0); a2.rotation.z =  dir*Math.PI/4; g.add(a2);
-      const hit = new THREE.Mesh(new THREE.CircleGeometry(L*2.2, 18), new THREE.MeshBasicMaterial({ visible:false }));
-      hit.position.z = 0.001; hit.userData = { kind:'turn', dir }; g.add(hit); pickables.push(hit);
-      return g;
-    }
-    [-1, 1].forEach(dir=>{
-      const c = makeChevron(dir);
-      c.quaternion.copy(cQuat);
-      c.position.copy(knobMid).addScaledVector(rgt, dir*0.034).addScaledVector(nrm, 0.003);
-      scene.add(c);
-    });
-  }
+  /* 3D turn chevrons were removed by request (visual preference) — the knob
+     itself is still the only thing raycast; pickables now only ever
+     contains its mesh(es). The dead 'turn' branch lower down in the
+     pointerdown handler is harmless and left in place in case turning is
+     reintroduced some other way later. */
 
   const startView = new URLSearchParams(location.search).get('view');
   setView((startView && VIEWS[startView]) ? startView : 'front', true);
@@ -246,12 +230,18 @@ new GLTFLoader().load(GLB, (gltf)=>{
     size: size.toArray().map(v=>+v.toFixed(4)),
     anchor: named['SCREEN_anchor'] ? named['SCREEN_anchor'].getWorldPosition(new THREE.Vector3()).toArray().map(v=>+v.toFixed(4)) : null,
     knob: knobNode ? knobNode.getWorldPosition(new THREE.Vector3()).toArray().map(v=>+v.toFixed(4)) : null,
+    pickables: pickables.length,
   };
   log('GEOMETRY', JSON.stringify(report));
   dbg.textContent =
-    `loaded ✓  nodes:${report.nodes}\n`+
+    `loaded ✓  nodes:${report.nodes}  pickables:${report.pickables}\n`+
     `size(m): ${report.size.join(', ')}\n`+
-    `knob:    ${report.knob ? report.knob.join(', ') : '—'}`;
+    `knob:    ${report.knob ? report.knob.join(', ') : '— NOT FOUND'}`;
+ } catch(setupErr) {
+  log('SETUP ERROR (model loaded but interactivity setup crashed)', setupErr);
+  dbg.textContent = 'SETUP ERROR: ' + (setupErr && setupErr.message ? setupErr.message : setupErr) +
+    '\n(model may be visible but nothing will be tappable)';
+ }
 }, undefined, (err)=>{
   log('LOAD ERROR', err);
   dbg.textContent = 'LOAD ERROR: ' + (err && err.message ? err.message : err);
@@ -281,8 +271,10 @@ let hmiWin = null;
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let knobDown = null, turning = false;
+let knobPressAnim = null;   // transient {t:0..1} — drives the knob "press" scale pulse
 
 function hmiSend(act, extra){
+  console.log('[djtwin] hmiSend', act, extra, 'hmiWin ready?', !!hmiWin);
   if(hmiWin) hmiWin.postMessage(Object.assign({ ch:'ms4', act }, extra||{}), '*');
 }
 
@@ -314,8 +306,67 @@ function pick(ev){
 function spinKnob(dir){
   if(knobNode) knobNode.rotateOnAxis(new THREE.Vector3(0,1,0), -dir*0.26);
 }
+function pulseKnob(){
+  knobPressAnim = { t: 0 };   // tick() animates a quick press-and-release scale dip
+}
 
-/* ── pointerdown (capture phase — runs BEFORE OrbitControls) ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   BACKGROUND-TAP BRIDGE (knob only, for now) — the overlay iframe can never
+   hand a real pointer event back to us once a tap lands inside its
+   rectangle (hard iframe limit, not something CSS can route around), so
+   instead it tells us WHERE a background tap landed in its own local pixel
+   space, and we turn that back into a 3D ray ourselves, using the exact
+   transform already used to place the overlay (window.__overlay), then
+   raycast the same `pickables` the canvas-direct path already uses.
+   ══════════════════════════════════════════════════════════════════════════ */
+function overlayPxToWorld(px, py){
+  const halfW = HMI_W_PX/2, halfH = HMI_H_PX/2;
+  const local = new THREE.Vector3((px-halfW)*PX2M, (halfH-py)*PX2M, 0);
+  local.applyQuaternion(window.__overlay.quaternion);
+  return window.__overlay.position.clone().add(local);
+}
+
+window.addEventListener('message', ev=>{
+  const m = ev.data;
+  if(!m || m.ch !== 'ms4' || m.act !== 'bgtap') return;
+  if(!window.__overlay || !pickables.length) return;
+  const world = overlayPxToWorld(m.x, m.y);
+  const ndcPoint = world.clone().project(camera);     // world point → NDC
+  ndc.set(ndcPoint.x, ndcPoint.y);
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects(pickables, false);
+  const o = hits.length ? hits[0].object : null;
+  log('bgtap -> world', world.toArray().map(v=>+v.toFixed(4)), 'hit:', o ? o.userData.kind : 'none');
+  if(o && o.userData.kind === 'knob'){
+    hmiSend('tap', { id: 'knob' });
+    pulseKnob();
+  }
+  // chevrons intentionally left out of this path for now -- knob only, per scope
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DIAGNOSTIC — proves WHERE a tap actually lands, without needing F12.
+   Attached at window-level in the CAPTURE phase, so it fires for every single
+   pointerdown anywhere on the page, REGARDLESS of which element the browser's
+   hit-test decided is "on top" at that point (unlike the canvas-only knob
+   listener below, which only fires if the canvas itself is the actual target).
+   If ev.target reports the IFRAME instead of CANVAS while tapping over the
+   knob, that proves the overlay is sitting in front of the 3D layer there.
+   ══════════════════════════════════════════════════════════════════════════ */
+window.addEventListener('pointerdown', ev=>{
+  const r = renderer.domElement.getBoundingClientRect();
+  const real = document.elementFromPoint(ev.clientX, ev.clientY);
+  const info = {
+    x: ev.clientX, y: ev.clientY,
+    'ev.target': ev.target.tagName + (ev.target.id ? '#'+ev.target.id : '') + (ev.target===renderer.domElement ? ' (=canvas ✓)' : ''),
+    elementFromPoint: real ? (real.tagName + (real.id ? '#'+real.id : '')) : null,
+    canvasRect: { w: Math.round(r.width), h: Math.round(r.height) },
+    pickablesAtThisTime: pickables.length,
+  };
+  console.log('[TAP-DIAGNOSTIC]', JSON.stringify(info));
+  window.__lastTap = info;
+}, { capture: true });
+
 renderer.domElement.addEventListener('pointerdown', ev=>{
   knobDown = null; turning = false;
   const o = pick(ev);
@@ -353,6 +404,7 @@ window.addEventListener('pointerup', ev=>{
     /* 10 px threshold — generous enough for a touch tap without false positives */
     if(moved < 10){
       hmiSend('tap', { id: 'knob' });
+      pulseKnob();
     }
     knobDown = null;
   }
@@ -375,6 +427,12 @@ addEventListener('resize', ()=>{
     const k = camAnim.t<.5 ? 2*camAnim.t*camAnim.t : 1-Math.pow(-2*camAnim.t+2,2)/2; // easeInOutQuad
     camera.position.lerpVectors(camAnim.from, camAnim.to, k);
     if(camAnim.t >= 1) camAnim = null;
+  }
+  if(knobPressAnim && knobNode){
+    knobPressAnim.t = Math.min(1, knobPressAnim.t + 0.09);
+    const s = 1 - 0.12*Math.sin(knobPressAnim.t*Math.PI);   // quick dip down, smooth return — no overshoot
+    knobNode.scale.copy(knobBaseScale).multiplyScalar(s);
+    if(knobPressAnim.t >= 1){ knobNode.scale.copy(knobBaseScale); knobPressAnim = null; }
   }
   controls.update();
   renderer.render(scene, camera);

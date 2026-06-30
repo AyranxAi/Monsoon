@@ -7,6 +7,15 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monsoon 4 Control Panel</title>
+<script>
+  // DIAGNOSTIC: this iframe has its own isolated `console` — forward everything
+  // to the parent page's console too, so it shows up in the parent's eruda panel
+  // alongside the 3D layer's logs, instead of two separate invisible consoles.
+  ['log','warn','error'].forEach(level=>{
+    const orig = console[level].bind(console);
+    console[level] = (...args)=>{ orig(...args); try{ window.parent.console[level]('[overlay]', ...args); }catch(e){} };
+  });
+</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1295,8 +1304,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-#kt-left  { right: 19.5%; }
-#kt-right { right: 1%; }
+#kt-left  { right: 10.12%; }
+#kt-right { right: 10.12%; }
 #knob:hover ~ .kt-chev,
 .kt-chev:hover { opacity: 1; }
 @media (hover: none) and (pointer: coarse) {
@@ -2602,6 +2611,7 @@ body {
   // knobPress — extracted so the 3D bridge can call it directly (avoids dispatching
   // synthetic events on a display:none element, which is unreliable on some browsers)
   function knobPress() {
+    console.log('[overlay] knobPress() called. state:', {onPipPopup, onDrying, onSettings, onDash, selftestDone, onPreset, editMode});
     if (onPipPopup) {
       pipActivate();                   // Continue / Stop ventilation
     } else if (onDrying) {
@@ -2733,11 +2743,15 @@ body {
      ═══════════════════════════════════════════════════════════════════════════ -->
 <style id="overlay3d-style">
   /* panel transparent → 3D black bezel shows through; no card chrome.
-     pointer-events:none on html/body is CRITICAL: empty-panel clicks fall THROUGH
-     the iframe to the 3D canvas (orbit + knob/chevron raycast). Buttons re-enable below. */
+     html/body/.panel are pointer-events:auto — a tap can NEVER cross the <iframe>
+     boundary back out to the parent page via CSS alone (browsers always hand a tap
+     fully into whichever document the iframe covers, full stop). So instead of
+     hoping it "falls through", this stays a real clickable surface, and the
+     overlay3d-bgtap script below explicitly reports background taps to the
+     parent so it can raycast the 3D knob itself. Real buttons override below. */
   html, body { background: transparent !important; margin: 0 !important; padding: 0 !important;
                width: 100% !important; height: 100% !important; overflow: hidden !important;
-               pointer-events: none !important; }
+               pointer-events: auto !important; touch-action: manipulation !important; }
   /* fill the iframe EXACTLY (iframe aspect == design 1.754) so the 1:1 CSS3D map is exact */
   .panel {
     background: transparent !important;
@@ -2747,7 +2761,8 @@ body {
     height: 100vh !important;
     max-width: none !important;
     aspect-ratio: auto !important;
-    pointer-events: none !important;   /* empty-panel clicks fall through to the 3D (orbit + knob raycast) */
+    pointer-events: auto !important;   /* real surface — overlay3d-bgtap script handles empty taps */
+    touch-action: manipulation !important;
   }
 
   /* the 3D dome knob replaces the HTML knob; the ‹ › chevrons are shown in HTML
@@ -2811,6 +2826,7 @@ body {
   var queue = [];
 
   function dispatch(m) {
+    console.log('[overlay-bridge] dispatch received:', m, 'powered=', powered, 'selftestDone=', selftestDone, 'onPreset=', onPreset, 'onDash=', onDash);
     if (m.act === 'turn') {
       /* Call knobTurn via the window reference set by the main script */
       if (typeof window.__knobTurn === 'function') {
@@ -2875,6 +2891,40 @@ body {
       e.preventDefault();
     }
   }, { passive: false });
+</script>
+
+<script id="overlay3d-bgtap">
+/* ═══════════════════════════════════════════════════════════════════════════
+   BACKGROUND-TAP FORWARDING (knob only, for now)
+
+   html/body/.panel are pointer-events:auto again (see style block above) — a
+   tap can never escape the <iframe> boundary on its own once it has landed
+   inside it, so the 3D knob (which has no real DOM element here) can only be
+   reached if code INSIDE this document notices "that tap didn't hit any real
+   control" and reports it back out itself.
+
+   On every click that does NOT land on a real control (button / ring-btn /
+   chevron / preset card / dashboard field / settings row), this sends the
+   click's LOCAL x/y — already in this document's own pixel space, the same
+   1902.1×1084.5 reference everything here is positioned against — to
+   simulator.html via postMessage. The parent turns that point back into a
+   3D ray and raycasts the real Knob mesh.
+
+   Chevrons are deliberately NOT wired through this path yet — knob only,
+   per current scope. A tap that lands on the 3D chevrons will reach the
+   parent's raycaster and resolve correctly, but the parent currently
+   ignores "turn" hits from this path on purpose.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var REAL_CONTROLS =
+    '.btn, .ring-btn, .kt-chev, .ps-card, [id^="f-"], .dj-val, .d-box-header, .set-row, .st-continue';
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest(REAL_CONTROLS)) return;   // a real control already handled this tap
+    console.log('[overlay] bgtap (no real control under tap) at', e.clientX, e.clientY);
+    window.parent.postMessage({ ch: 'ms4', act: 'bgtap', x: e.clientX, y: e.clientY }, '*');
+  });
+})();
 </script>
 
 </body>
