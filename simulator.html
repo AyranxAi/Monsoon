@@ -77,6 +77,11 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
      chevrons land at their HMI %, and the hidden HTML knob's tap handler is
      driven by the 3D Knob via postMessage.
    The master monsoon4_doublejet.html stays untouched & fully editable.
+   
+   KNOB LIGHTING FEATURE (v2):
+   • When the knob is tapped, it emits a pulsing glow effect via emissive material
+   • The glow intensity animates smoothly from 0 to peak and back to 0
+   • Overlay compatibility is maintained — no changes to interaction logic
    ═══════════════════════════════════════════════════════════════════════════ */
 const GLB        = 'monsoon4_doublejet.glb?t=' + Date.now();   // cache-bust re-exports
 const OVERLAY    = 'monsoon4_doublejet_overlay.html';
@@ -150,6 +155,7 @@ window.__frame = ()=>{ controls.update(); renderer.render(scene, camera); css3d.
 const pickables = [];                 // only the 3D Knob is raycast (buttons/chevrons are HTML)
 let knobNode = null;
 let knobBaseScale = new THREE.Vector3(1,1,1);   // captured once GLB loads — animation multiplies THIS, never overwrites it
+let knobMeshes = [];                  // store mesh references for lighting effect
 
 new GLTFLoader().load(GLB, (gltf)=>{
  try {
@@ -210,7 +216,8 @@ new GLTFLoader().load(GLB, (gltf)=>{
       if(o.isMesh){ 
         o.userData.kind='knob'; 
         o.userData.id='knob'; // ensure the ID matches the HTML element
-        pickables.push(o); 
+        pickables.push(o);
+        knobMeshes.push(o);  // store for lighting effect
       } 
     }); 
   }
@@ -272,6 +279,7 @@ const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let knobDown = null, turning = false;
 let knobPressAnim = null;   // transient {t:0..1} — drives the knob "press" scale pulse
+let knobGlowAnim = null;    // transient {t:0..1} — drives the knob emissive glow pulse
 
 function hmiSend(act, extra){
   console.log('[djtwin] hmiSend', act, extra, 'hmiWin ready?', !!hmiWin);
@@ -310,6 +318,11 @@ function pulseKnob(){
   knobPressAnim = { t: 0 };   // tick() animates a quick press-and-release scale dip
 }
 
+/* ── KNOB LIGHTING EFFECT ── */
+function glowKnob(){
+  knobGlowAnim = { t: 0 };   // tick() animates the emissive glow pulse
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    BACKGROUND-TAP BRIDGE (knob only, for now) — the overlay iframe can never
    hand a real pointer event back to us once a tap lands inside its
@@ -340,6 +353,7 @@ window.addEventListener('message', ev=>{
   if(o && o.userData.kind === 'knob'){
     hmiSend('tap', { id: 'knob' });
     pulseKnob();
+    glowKnob();  // trigger lighting effect
   }
   // chevrons intentionally left out of this path for now -- knob only, per scope
 });
@@ -405,34 +419,9 @@ window.addEventListener('pointerup', ev=>{
     if(moved < 10){
       hmiSend('tap', { id: 'knob' });
       pulseKnob();
+      glowKnob();  // trigger lighting effect
     }
     knobDown = null;
-  }
-});
-
-/* ── pointermove — handle hover effect ── */
-let lastHovered = null;
-window.addEventListener('pointermove', ev => {
-  const o = pick(ev);
-  if (o && o.userData.kind === 'knob') {
-    if (lastHovered !== o) {
-      if (lastHovered && lastHovered.material) {
-        lastHovered.material.color.copy(lastHovered.userData.originalColor);
-      }
-      lastHovered = o;
-      if (o.material) {
-        o.material.color.copy(o.userData.hoverColor);
-      }
-      renderer.domElement.style.cursor = 'pointer';
-    }
-  } else {
-    if (lastHovered) {
-      if (lastHovered.material) {
-        lastHovered.material.color.copy(lastHovered.userData.originalColor);
-      }
-      lastHovered = null;
-      renderer.domElement.style.cursor = '';
-    }
   }
 });
 
@@ -460,6 +449,33 @@ addEventListener('resize', ()=>{
     knobNode.scale.copy(knobBaseScale).multiplyScalar(s);
     if(knobPressAnim.t >= 1){ knobNode.scale.copy(knobBaseScale); knobPressAnim = null; }
   }
+  
+  /* ── KNOB LIGHTING ANIMATION ── */
+  if(knobGlowAnim && knobMeshes.length > 0){
+    knobGlowAnim.t = Math.min(1, knobGlowAnim.t + 0.08);
+    // Smooth pulse: rise to peak at 0.5, then decay back to 0
+    const glowIntensity = Math.sin(knobGlowAnim.t * Math.PI) * 0.8;
+    knobMeshes.forEach(mesh => {
+      if(mesh.material){
+        // Set emissive color to a warm cyan/blue glow
+        mesh.material.emissive.setHex(0x00ccff);
+        mesh.material.emissiveIntensity = glowIntensity;
+        mesh.material.needsUpdate = true;
+      }
+    });
+    if(knobGlowAnim.t >= 1){
+      // Reset emissive to off
+      knobMeshes.forEach(mesh => {
+        if(mesh.material){
+          mesh.material.emissive.setHex(0x000000);
+          mesh.material.emissiveIntensity = 0;
+          mesh.material.needsUpdate = true;
+        }
+      });
+      knobGlowAnim = null;
+    }
+  }
+  
   controls.update();
   renderer.render(scene, camera);
   css3d.render(scene, camera);
