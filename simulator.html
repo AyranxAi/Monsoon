@@ -16,7 +16,8 @@
   /* CSS3D layer is click-through by default; the overlay iframe re-enables itself
      so its buttons/chevrons work and empty-panel clicks fall through to the canvas. */
   #css3d{position:absolute;inset:0;z-index:2;pointer-events:none; touch-action:none;}
-  #css3d iframe{border:0;background:transparent;pointer-events:auto;}
+  #css3d iframe{border:0;background:transparent;pointer-events:auto;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;}   /* safety net: don't render the mirrored back face */
 
   .badge{position:fixed;right:12px;top:12px;z-index:5;color:#37494f;font-size:12px;letter-spacing:.04em;
         background:rgba(255,255,255,.82);padding:5px 10px;border-radius:7px;pointer-events:none;}
@@ -154,6 +155,8 @@ window.__THREE = THREE; window.__scene = scene; window.__camera = camera; window
 window.__frame = ()=>{ controls.update(); renderer.render(scene, camera); css3d.render(scene, camera); };   // debug: force one frame
 const pickables = [];                 // only the 3D Knob is raycast (buttons/chevrons are HTML)
 let knobNode = null;
+let overlayNormal = null;             // world-space normal of the HMI panel, set once GLB/anchor loads
+let overlayObj = null;                // the CSS3DObject, so the tick loop can fade it
 let knobBaseScale = new THREE.Vector3(1,1,1);   // captured once GLB loads — animation multiplies THIS, never overwrites it
 let knobMeshes = [];                  // store mesh references for lighting effect
 
@@ -203,6 +206,8 @@ new GLTFLoader().load(GLB, (gltf)=>{
     obj.quaternion.copy(oQuat);
     scene.add(obj);
     window.__overlay = obj;
+    overlayObj = obj;
+    overlayNormal = normal.clone();   // panel is static in world space; reuse this every frame
     log('OVERLAY anchor', aPos.toArray().map(v=>+v.toFixed(4)), 'normal', normal.toArray().map(v=>+v.toFixed(3)));
   } else {
     log('WARN: SCREEN_anchor not found — overlay not placed');
@@ -476,6 +481,18 @@ addEventListener('resize', ()=>{
     }
   }
   
+  /* ── OVERLAY OCCLUSION: CSS3D has no depth test against the WebGL body, so it
+     will otherwise render ON TOP of the model even when viewed from behind the
+     panel. Fade it out as the camera crosses to the back, so the GLB body reads
+     as covering the screen instead of a flat sticker floating through it. ── */
+  if(overlayObj && overlayNormal){
+    const toCam = camera.position.clone().sub(overlayObj.position).normalize();
+    const facing = toCam.dot(overlayNormal);           // 1 = dead-on front, 0 = edge-on, <0 = behind
+    const k = THREE.MathUtils.smoothstep(facing, -0.05, 0.15);  // smooth fade across the edge, not a hard cut
+    overlayObj.element.style.opacity = k;
+    overlayObj.element.style.pointerEvents = k > 0.5 ? 'auto' : 'none';
+  }
+
   controls.update();
   renderer.render(scene, camera);
   css3d.render(scene, camera);
