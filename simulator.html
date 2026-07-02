@@ -2,60 +2,105 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Monsoon 4 DoubleJet — Digital Twin (GLB body + live HMI)</title>
+<title>Monsoon 4 DoubleJet — Digital Twin</title>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:#e9ecec;font-family:system-ui,sans-serif;touch-action:none;}
-  #app{position:fixed;inset:0;}
-  /* touch-action:none on the canvas prevents the browser from intercepting
-     touch events for scroll/zoom, ensuring our pointer events always fire */
-  #webgl{position:absolute;inset:0;z-index:1;touch-action:none;}
-  /* CSS3D layer is click-through by default; the overlay iframe re-enables itself
-     so its buttons/chevrons work and empty-panel clicks fall through to the canvas. */
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;}
+  
+  /* Layout: 3D view on top, controls on bottom */
+  #webgl-container{position:relative;flex:1;z-index:1;overflow:hidden;}
+  #webgl{position:absolute;inset:0;touch-action:none;}
   #css3d{position:absolute;inset:0;z-index:2;pointer-events:none; touch-action:none;}
   #css3d iframe{border:0;background:transparent;pointer-events:auto;
-    backface-visibility:hidden; -webkit-backface-visibility:hidden;}   /* safety net: don't render the mirrored back face */
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;}
 
-  .badge{position:fixed;right:12px;top:12px;z-index:5;color:#37494f;font-size:12px;letter-spacing:.04em;
+  /* UI Elements */
+  .badge{position:fixed;right:12px;top:12px;z-index:5;color:#37494f;font-size:11px;letter-spacing:.04em;
         background:rgba(255,255,255,.82);padding:5px 10px;border-radius:7px;pointer-events:none;}
-  .hint{position:fixed;left:12px;bottom:12px;z-index:5;color:#445;font-size:13px;
-        background:rgba(255,255,255,.82);padding:6px 11px;border-radius:8px;pointer-events:none;}
-  #dbg{position:fixed;left:12px;top:12px;z-index:5;color:#0a3;font:12px ui-monospace,monospace;
-        background:rgba(255,255,255,.85);padding:6px 10px;border-radius:7px;white-space:pre;pointer-events:none;}
+  /* top-left (i) info toggle — collapsed to a circle, expands to show the
+     controls hint for 5s then collapses back for cleanliness. */
+  #info{position:fixed;left:12px;top:12px;z-index:6;display:flex;align-items:center;gap:8px;}
+  #info-btn{flex:none;width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;padding:0;
+        background:rgba(255,255,255,.85);color:#37494f;font:italic 600 14px Georgia,serif;line-height:26px;
+        box-shadow:0 1px 3px rgba(0,0,0,.12);pointer-events:auto;}
+  #info-msg{color:#445;font-size:12px;background:rgba(255,255,255,.9);padding:6px 11px;border-radius:8px;
+        max-width:60vw;white-space:nowrap;pointer-events:none;opacity:0;transform:translateX(-6px);
+        transition:opacity .18s ease,transform .18s ease;}
+  #info.open #info-msg{opacity:1;transform:translateX(0);}
+  @media (max-width:600px){ #info-msg{white-space:normal;} }
+  #dbg{position:fixed;left:12px;top:12px;z-index:5;color:#0a3;font:10px ui-monospace,monospace;
+        background:rgba(255,255,255,.85);padding:6px 10px;border-radius:7px;white-space:pre;pointer-events:none;display:none;}
 
-  /* preset view buttons */
-  #views{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;display:flex;gap:8px;}
-  #views button{font:13px system-ui,sans-serif;color:#2a3b40;background:rgba(255,255,255,.9);
-        border:1px solid #c4cccd;border-radius:8px;padding:7px 14px;cursor:pointer;
-        box-shadow:0 1px 3px rgba(0,0,0,.08);transition:background .15s,border-color .15s;}
-  #views button:hover{background:#fff;border-color:#9fb6bb;}
+  /* preset view buttons — float over the 3D so the render keeps full height.
+     Container is transparent + pointer-events:none so drags around the pills
+     still orbit the model; only the pills themselves capture clicks. */
+  #views{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;gap:8px;padding:12px;
+        justify-content:center;background:transparent;border-top:none;pointer-events:none;}
+  #views button{pointer-events:auto;font:14px system-ui,sans-serif;color:#2a3b40;background:#fff;
+        border:1px solid #c4cccd;border-radius:10px;padding:10px 16px;cursor:pointer;
+        box-shadow:0 1px 3px rgba(0,0,0,.08);transition:background .15s,border-color .15s;flex:1;max-width:120px;}
+  #views button:active{background:#f0f0f0;}
   #views button.active{background:#13827522;border-color:#138275;color:#0d5f55;font-weight:600;}
+
+  /* Ensure bottom layout on mobile and landscape */
+  @media (max-width: 600px), (orientation: landscape) {
+    #app { flex-direction: column; }
+    #views { flex-direction: row; width: 100%; border-top: none; }
+    .badge { font-size: 10px; padding: 4px 8px; }
+  }
 
   * {
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
+    -webkit-tap-highlight-color: transparent;
   }
 </style>
 </head>
 <body>
-<!-- DIAGNOSTIC: eruda gives a mobile-friendly DevTools console (Console/Elements/Network)
-     directly on-page, no F12 / no second computer needed. Tap the floating circle button
-     bottom-right to open it. Remove this script tag once debugging is done. -->
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-<div id="app"><div id="webgl"></div><div id="css3d"></div></div>
-<div class="badge">Monsoon 4 · DoubleJet — Digital Twin</div>
-<div class="hint">Drag empty space to orbit · scroll to zoom · click the buttons / chevrons · tap the knob</div>
-<div id="dbg">loading…</div>
-<div id="views">
-  <button data-view="front">Front</button>
-  <button data-view="tq">3-Quarter</button>
-  <button data-view="ports">Gas Ports</button>
+<script>eruda.init(); eruda.hide();</script>
+
+<div id="app">
+  <div id="webgl-container">
+    <div id="webgl"></div>
+    <div id="css3d"></div>
+    <div id="info">
+      <button id="info-btn" type="button" aria-label="Controls help" title="Controls">i</button>
+      <div id="info-msg">Drag to orbit · pinch to zoom · tap the knob</div>
+    </div>
+  </div>
+  <div id="views">
+    <button data-view="front">Front</button>
+    <button data-view="tq">3-Quarter</button>
+    <button data-view="ports">Gas Ports</button>
+  </div>
 </div>
+
+<div class="badge">Monsoon 4 · DoubleJet</div>
+<div id="dbg">loading…</div>
+
+<script>
+/* (i) info toggle: click to reveal the controls hint, auto-collapse after 5s */
+(function(){
+  var info = document.getElementById('info');
+  var btn  = document.getElementById('info-btn');
+  var timer = null;
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if(info.classList.contains('open')){
+      info.classList.remove('open'); clearTimeout(timer); return;
+    }
+    info.classList.add('open');
+    clearTimeout(timer);
+    timer = setTimeout(function(){ info.classList.remove('open'); }, 5000);
+  });
+})();
+</script>
 
 <script type="importmap">
 { "imports": {
@@ -69,132 +114,120 @@ import { OrbitControls }              from 'three/addons/controls/OrbitControls.
 import { GLTFLoader }                 from 'three/addons/loaders/GLTFLoader.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   DoubleJet digital twin — "mask with the HTML".
-   • 3D (WebGL): the GLB body + matte bezel (SCREEN_panel) + grey screen rect
-     (SCREEN_display) + the user's hand-made dome Knob.
-   • HTML (CSS3D): monsoon4_doublejet_overlay.html mapped 1:1 onto the content
-     frame so the live screen lands on SCREEN_display, the flat buttons + ‹ ›
-     chevrons land at their HMI %, and the hidden HTML knob's tap handler is
-     driven by the 3D Knob via postMessage.
-   The master monsoon4_doublejet.html stays untouched & fully editable.
-   
-   KNOB LIGHTING FEATURE (v2):
-   • When the knob is tapped, it emits a pulsing glow effect via emissive material
-   • The glow intensity animates smoothly from 0 to peak and back to 0
-   • Overlay compatibility is maintained — no changes to interaction logic
-   ═══════════════════════════════════════════════════════════════════════════ */
-const GLB        = 'monsoon4_doublejet.glb?t=' + Date.now();   // cache-bust re-exports
+const GLB        = 'monsoon4_doublejet.glb?t=' + Date.now();
 const OVERLAY    = 'monsoon4_doublejet_overlay.html';
-const HMI_W_PX   = 1902.1, HMI_H_PX = 1084.5;   // HMI reference pixel size (aspect 1.754)
-const PWc        = 0.2608, PHc = 0.1487;        // content-frame size in metres (== full HMI rect)
-const PX2M       = PWc / HMI_W_PX;              // exact px→world scale (== PHc/HMI_H_PX)
-const SURF_OFF   = 0.0016;                       // push the overlay just in front of the panel face
+const HMI_W_PX   = 1902.1, HMI_H_PX = 1084.5;
+const PWc        = 0.2608, PHc = 0.1487;
+const PX2M       = PWc / HMI_W_PX;
+const SURF_OFF   = 0.0016;
 
 const dbg = document.getElementById('dbg');
 const log = (...a)=>console.log('[djtwin]', ...a);
+const container = document.getElementById('webgl-container');
 
-/* ── WebGL renderer (flat, matte, no harsh glare — medical, glare-sensitive user) ── */
+/* ── WebGL renderer ── */
 const renderer = new THREE.WebGLRenderer({ antialias:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
+renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-/* touch-action:none on the canvas element itself prevents iOS/Android from
-   intercepting pointer events for native scroll/pinch-zoom gestures */
 renderer.domElement.style.touchAction = 'none';
 document.getElementById('webgl').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xe9ecec);
 
-const camera = new THREE.PerspectiveCamera(34, innerWidth/innerHeight, 0.01, 100);
+const camera = new THREE.PerspectiveCamera(34, container.clientWidth/container.clientHeight, 0.01, 100);
 
-/* ── soft, flat lighting: hemisphere + two gentle directionals, no specular blowout ── */
+/* ── Lighting ── */
 scene.add(new THREE.HemisphereLight(0xffffff, 0x97a1a3, 0.95));
 const key = new THREE.DirectionalLight(0xffffff, 0.55); key.position.set(0.5, 1.2, 0.9); scene.add(key);
 const fill= new THREE.DirectionalLight(0xffffff, 0.22); fill.position.set(-0.7, 0.5, -0.4); scene.add(fill);
 
-/* ── LIMITED orbit (can't flip under; screen stays readable) ── */
+/* ── Controls ── */
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.enablePan = false;
 controls.minDistance = 0.30; controls.maxDistance = 1.6;
 controls.minPolarAngle = THREE.MathUtils.degToRad(28);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(90);
 
-/* ── CSS3D renderer (overlay layer) ── */
-const css3d = new CSS3DRenderer(); css3d.setSize(innerWidth, innerHeight);
+/* ── CSS3D renderer ── */
+const css3d = new CSS3DRenderer(); 
+css3d.setSize(container.clientWidth, container.clientHeight);
 document.getElementById('css3d').appendChild(css3d.domElement);
 css3d.domElement.style.pointerEvents = 'none';
 
-/* ── preset views: animate azimuth°/polar°/distance about the target ── */
+/* ── Views ── */
 let target = new THREE.Vector3(0, 0.20, 0.12);
-const VIEWS = {
-  front: [   0, 66, 0.62 ],   // straight front, slightly above — reads the screen
-  tq:    [ -32, 60, 0.66 ],   // three-quarter
-  ports: [   6, 84, 0.50 ],   // low & close on the gas-connector row
-};
+  const getScale = () => {
+    const aspect = container.clientWidth / container.clientHeight;
+    // On mobile/narrow screens (aspect < 1), we need to zoom out more.
+    // Base scale is 1.0 for landscape/desktop.
+    // For portrait mobile (e.g. aspect 0.5), we increase distance.
+    if (aspect < 1.0) {
+      return 1.0 + (1.0 - aspect) * 1.5; // Dynamic scaling based on narrowness
+    }
+    return 1.0;
+  };
+
+  const VIEWS = {
+    front: [   0, 66, 0.62 ],
+    tq:    [ -32, 60, 0.66 ],
+    ports: [   6, 84, 0.50 ],
+  };
 let camAnim = null;
-function setView(name, instant){
-  const v = VIEWS[name] || VIEWS.front;
-  const a = THREE.MathUtils.degToRad(v[0]), p = THREE.MathUtils.degToRad(v[1]), d = v[2];
-  const dest = new THREE.Vector3(
-    target.x + d*Math.sin(p)*Math.sin(a),
-    target.y + d*Math.cos(p),
-    target.z + d*Math.sin(p)*Math.cos(a)
-  );
-  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
-  if(instant){ camera.position.copy(dest); controls.update(); return; }
-  camAnim = { from: camera.position.clone(), to: dest, t: 0 };
-}
+  function setView(name, instant){
+    const v = VIEWS[name] || VIEWS.front;
+    const a = THREE.MathUtils.degToRad(v[0]), p = THREE.MathUtils.degToRad(v[1]), d = v[2] * getScale();
+    const dest = new THREE.Vector3(
+      target.x + d*Math.sin(p)*Math.sin(a),
+      target.y + d*Math.cos(p),
+      target.z + d*Math.sin(p)*Math.cos(a)
+    );
+    document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+    if(instant){ camera.position.copy(dest); controls.update(); return; }
+    camAnim = { from: camera.position.clone(), to: dest, t: 0 };
+  }
 document.querySelectorAll('#views button').forEach(b=>{
   b.addEventListener('click', ()=> setView(b.dataset.view));
 });
 
-/* ── load the GLB body ── */
-window.__THREE = THREE; window.__scene = scene; window.__camera = camera; window.__controls = controls; window.__renderer = renderer;
-window.__frame = ()=>{ controls.update(); renderer.render(scene, camera); css3d.render(scene, camera); };   // debug: force one frame
-const pickables = [];                 // only the 3D Knob is raycast (buttons/chevrons are HTML)
+/* ── Load Model ── */
+const pickables = [];
 let knobNode = null;
-let overlayNormal = null;             // world-space normal of the HMI panel, set once GLB/anchor loads
-let overlayObj = null;                // the CSS3DObject, so the tick loop can fade it
-let knobBaseScale = new THREE.Vector3(1,1,1);   // captured once GLB loads — animation multiplies THIS, never overwrites it
-let knobMeshes = [];                  // store mesh references for lighting effect
+let overlayNormal = null;
+let overlayObj = null;
+let knobBaseScale = new THREE.Vector3(1,1,1);
+let knobMeshes = [];
+let hmiWin = null;
 
 new GLTFLoader().load(GLB, (gltf)=>{
  try {
-  const model = gltf.scene; window.__model = model;
+  const model = gltf.scene;
   const named = {};
   model.traverse(o=>{
     if(o.name) named[o.name] = o;
     if(o.isMesh && o.material){ o.material.envMapIntensity = 0.4; o.material.needsUpdate = true; }
   });
-  window.__named = named;
   scene.add(model);
 
-  // the BTN_* meshes are HTML hit-proxies only → keep them out of the WebGL render
   ['BTN_jet','BTN_laser','BTN_mode'].forEach(n=>{ if(named[n]) named[n].visible = false; });
 
-  // frame on the model
   const box = new THREE.Box3().setFromObject(model);
   const center = box.getCenter(new THREE.Vector3());
-  const size   = box.getSize(new THREE.Vector3());
   target.copy(center); controls.target.copy(center);
 
-  /* ── place the live HMI overlay on the content frame via SCREEN_anchor ── */
+  /* ── Overlay Placement ── */
   const anchor = named['SCREEN_anchor'];
   if(anchor){
     anchor.updateWorldMatrix(true, false);
     const aPos = anchor.getWorldPosition(new THREE.Vector3());
     const aQuat = anchor.getWorldQuaternion(new THREE.Quaternion());
-    // anchor maps local +Y → panel normal; a CSS3D plane's normal is local +Z.
-    // Rotate −90° about X so the iframe (XY plane, +Z out) faces along the rake normal,
-    // with HMI-up → up-the-rake and HMI-right → world +X.
     const corr = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2);
     const oQuat = aQuat.clone().multiply(corr);
     const normal = new THREE.Vector3(0,0,1).applyQuaternion(oQuat).normalize();
 
     const iframe = document.createElement('iframe');
-    iframe.src = OVERLAY + '?cache_bust=' + Math.random().toString(36).substring(7);   // cache-bust so overlay edits load fresh
+    iframe.src = OVERLAY + '?cache_bust=' + Math.random().toString(36).substring(7);
     iframe.style.width = HMI_W_PX + 'px';
     iframe.style.height = HMI_H_PX + 'px';
     iframe.setAttribute('allowtransparency', 'true');
@@ -205,104 +238,38 @@ new GLTFLoader().load(GLB, (gltf)=>{
     obj.position.copy(aPos).addScaledVector(normal, SURF_OFF);
     obj.quaternion.copy(oQuat);
     scene.add(obj);
-    window.__overlay = obj;
     overlayObj = obj;
-    overlayNormal = normal.clone();   // panel is static in world space; reuse this every frame
-    log('OVERLAY anchor', aPos.toArray().map(v=>+v.toFixed(4)), 'normal', normal.toArray().map(v=>+v.toFixed(3)));
-  } else {
-    log('WARN: SCREEN_anchor not found — overlay not placed');
+    overlayNormal = normal.clone();
   }
 
-  // the 3D dome knob is raycast for TAP
   knobNode = named['Knob'];
-  if(knobNode){ 
-    knobBaseScale.copy(knobNode.scale);   // remember whatever scale the GLB actually has, uniform or not
-    knobNode.traverse(o=>{ 
-      if(o.isMesh){ 
-        o.userData.kind='knob'; 
-        o.userData.id='knob'; // ensure the ID matches the HTML element
+  if(knobNode){
+    knobBaseScale.copy(knobNode.scale);
+    knobNode.traverse(o=>{
+      if(o.isMesh){
+        o.userData.kind='knob';
         pickables.push(o);
-        knobMeshes.push(o);  // store for lighting effect
-      } 
-    }); 
+        knobMeshes.push(o);
+      }
+    });
   }
 
-  /* 3D turn chevrons were removed by request (visual preference) — the knob
-     itself is still the only thing raycast; pickables now only ever
-     contains its mesh(es). The dead 'turn' branch lower down in the
-     pointerdown handler is harmless and left in place in case turning is
-     reintroduced some other way later. */
+  setView('front', true);
+ } catch(err) { log('SETUP ERROR', err); }
+}, undefined, (err)=> log('LOAD ERROR', err));
 
-  const startView = new URLSearchParams(location.search).get('view');
-  setView((startView && VIEWS[startView]) ? startView : 'front', true);
-  window.setView = setView;
-
-  const report = {
-    nodes: Object.keys(named).length,
-    size: size.toArray().map(v=>+v.toFixed(4)),
-    anchor: named['SCREEN_anchor'] ? named['SCREEN_anchor'].getWorldPosition(new THREE.Vector3()).toArray().map(v=>+v.toFixed(4)) : null,
-    knob: knobNode ? knobNode.getWorldPosition(new THREE.Vector3()).toArray().map(v=>+v.toFixed(4)) : null,
-    pickables: pickables.length,
-  };
-  log('GEOMETRY', JSON.stringify(report));
-  dbg.textContent =
-    `loaded ✓  nodes:${report.nodes}  pickables:${report.pickables}\n`+
-    `size(m): ${report.size.join(', ')}\n`+
-    `knob:    ${report.knob ? report.knob.join(', ') : '— NOT FOUND'}`;
- } catch(setupErr) {
-  log('SETUP ERROR (model loaded but interactivity setup crashed)', setupErr);
-  dbg.textContent = 'SETUP ERROR: ' + (setupErr && setupErr.message ? setupErr.message : setupErr) +
-    '\n(model may be visible but nothing will be tappable)';
- }
-}, undefined, (err)=>{
-  log('LOAD ERROR', err);
-  dbg.textContent = 'LOAD ERROR: ' + (err && err.message ? err.message : err);
-});
-
-/* ══════════════════════════════════════════════════════════════════════════
-   INTERACTION — knob tap + chevron click, desktop AND mobile touch.
-
-   ROOT CAUSE FIXES:
-   1. OrbitControls conflict: OrbitControls listens to pointerdown on the same
-      canvas element. If we don't stop it, it captures the pointer and our
-      pointerup never fires for knob/chevron hits.
-      FIX: use { capture: true } so our listener runs FIRST in the capture
-      phase, then call ev.stopPropagation() to prevent OrbitControls from
-      seeing the event at all when we hit a pickable.
-
-   2. Touch coordinate handling: PointerEvent always has clientX/Y for touch
-      (unlike TouchEvent). However on some mobile browsers the first pointer
-      event may have stale coordinates. We normalise via getClientXY().
-
-   3. Tap threshold: increased to 10px (from 6px) for touch-friendly tapping.
-
-   4. pointercancel: handles system interruptions (incoming call, scroll, etc.)
-      on mobile — always re-enables orbit and clears state.
-   ══════════════════════════════════════════════════════════════════════════ */
-let hmiWin = null;
+/* ── Interaction ── */
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
-let knobDown = null, turning = false;
-let knobPressAnim = null;   // transient {t:0..1} — drives the knob "press" scale pulse
-let knobGlowAnim = null;    // transient {t:0..1} — drives the knob emissive glow pulse
+let knobDown = null;
+let knobPressAnim = null, knobGlowAnim = null;
 
 function hmiSend(act, extra){
-  console.log('[djtwin] hmiSend', act, extra, 'hmiWin ready?', !!hmiWin);
   if(hmiWin) hmiWin.postMessage(Object.assign({ ch:'ms4', act }, extra||{}), '*');
 }
 
-/* Normalise pointer coordinates — works for mouse, pen, and touch PointerEvents */
 function getClientXY(ev){
-  // PointerEvent always carries clientX/Y even for touch pointers
-  // Guard against the rare case of (0,0) on first touch by checking pointerId
-  if(ev.clientX !== undefined && ev.clientY !== undefined){
-    return { x: ev.clientX, y: ev.clientY };
-  }
-  // Fallback for legacy TouchEvent (should not occur with pointer-event listeners)
-  if(ev.touches && ev.touches.length > 0){
-    return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
-  }
-  return { x: 0, y: 0 };
+  return { x: ev.clientX, y: ev.clientY };
 }
 
 function pick(ev){
@@ -316,190 +283,91 @@ function pick(ev){
   return hits.length ? hits[0].object : null;
 }
 
-function spinKnob(dir){
-  if(knobNode) knobNode.rotateOnAxis(new THREE.Vector3(0,1,0), -dir*0.26);
-}
-function pulseKnob(){
-  knobPressAnim = { t: 0 };   // tick() animates a quick press-and-release scale dip
-}
-
-/* ── KNOB LIGHTING EFFECT ── */
-function glowKnob(){
-  knobGlowAnim = { t: 0 };   // tick() animates the emissive glow pulse
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   BACKGROUND-TAP BRIDGE (knob only, for now) — the overlay iframe can never
-   hand a real pointer event back to us once a tap lands inside its
-   rectangle (hard iframe limit, not something CSS can route around), so
-   instead it tells us WHERE a background tap landed in its own local pixel
-   space, and we turn that back into a 3D ray ourselves, using the exact
-   transform already used to place the overlay (window.__overlay), then
-   raycast the same `pickables` the canvas-direct path already uses.
-   ══════════════════════════════════════════════════════════════════════════ */
-function overlayPxToWorld(px, py){
-  const halfW = HMI_W_PX/2, halfH = HMI_H_PX/2;
-  const local = new THREE.Vector3((px-halfW)*PX2M, (halfH-py)*PX2M, 0);
-  local.applyQuaternion(window.__overlay.quaternion);
-  return window.__overlay.position.clone().add(local);
-}
-
 window.addEventListener('message', ev=>{
   const m = ev.data;
-  if(!m || m.ch !== 'ms4' || m.act !== 'bgtap') return;
-  if(!window.__overlay || !pickables.length) return;
-  const world = overlayPxToWorld(m.x, m.y);
-  const ndcPoint = world.clone().project(camera);     // world point → NDC
+  if(!m || m.ch !== 'ms4' || m.act !== 'bgtap' || !overlayObj) return;
+  const halfW = HMI_W_PX/2, halfH = HMI_H_PX/2;
+  const local = new THREE.Vector3((m.x-halfW)*PX2M, (halfH-m.y)*PX2M, 0);
+  local.applyQuaternion(overlayObj.quaternion);
+  const world = overlayObj.position.clone().add(local);
+  const ndcPoint = world.clone().project(camera);
   ndc.set(ndcPoint.x, ndcPoint.y);
   raycaster.setFromCamera(ndc, camera);
   const hits = raycaster.intersectObjects(pickables, false);
-  const o = hits.length ? hits[0].object : null;
-  log('bgtap -> world', world.toArray().map(v=>+v.toFixed(4)), 'hit:', o ? o.userData.kind : 'none');
-  if(o && o.userData.kind === 'knob'){
+  if(hits.length && hits[0].object.userData.kind === 'knob'){
     hmiSend('tap', { id: 'knob' });
-    pulseKnob();
-    glowKnob();  // trigger lighting effect
+    knobPressAnim = { t: 0 }; knobGlowAnim = { t: 0 };
   }
-  // chevrons intentionally left out of this path for now -- knob only, per scope
 });
 
-/* ══════════════════════════════════════════════════════════════════════════
-   DIAGNOSTIC — proves WHERE a tap actually lands, without needing F12.
-   Attached at window-level in the CAPTURE phase, so it fires for every single
-   pointerdown anywhere on the page, REGARDLESS of which element the browser's
-   hit-test decided is "on top" at that point (unlike the canvas-only knob
-   listener below, which only fires if the canvas itself is the actual target).
-   If ev.target reports the IFRAME instead of CANVAS while tapping over the
-   knob, that proves the overlay is sitting in front of the 3D layer there.
-   ══════════════════════════════════════════════════════════════════════════ */
-window.addEventListener('pointerdown', ev=>{
-  const r = renderer.domElement.getBoundingClientRect();
-  const real = document.elementFromPoint(ev.clientX, ev.clientY);
-  const info = {
-    x: ev.clientX, y: ev.clientY,
-    'ev.target': ev.target.tagName + (ev.target.id ? '#'+ev.target.id : '') + (ev.target===renderer.domElement ? ' (=canvas ✓)' : ''),
-    elementFromPoint: real ? (real.tagName + (real.id ? '#'+real.id : '')) : null,
-    canvasRect: { w: Math.round(r.width), h: Math.round(r.height) },
-    pickablesAtThisTime: pickables.length,
-  };
-  console.log('[TAP-DIAGNOSTIC]', JSON.stringify(info));
-  window.__lastTap = info;
+renderer.domElement.addEventListener('pointerdown', ev=>{
+  knobDown = null;
+  const o = pick(ev);
+  if(o && o.userData.kind === 'knob'){
+    controls.enabled = false;
+    ev.stopPropagation();
+    knobDown = getClientXY(ev);
+  }
 }, { capture: true });
 
-renderer.domElement.addEventListener('pointerdown', ev=>{
-  knobDown = null; turning = false;
-  const o = pick(ev);
-  if(!o) return;                     // no hit → let OrbitControls orbit normally
-
-  const u = o.userData;
-
-  if(u.kind === 'turn'){
-    /* Chevron hit — disable orbit and stop the event so OrbitControls never
-       sees it. Re-enable after a short delay (chevron action is instant). */
-    controls.enabled = false;
-    turning = true;
-    ev.stopPropagation();            // ← prevents OrbitControls from starting orbit
-    hmiSend('turn', { dir: u.dir });
-    spinKnob(u.dir);
-    setTimeout(()=>{ controls.enabled = true; turning = false; }, 150);
-
-  } else if(u.kind === 'knob'){
-    /* Knob hit — disable orbit while the finger is down so the knob press
-       doesn't accidentally start an orbit gesture. */
-    controls.enabled = false;
-    ev.stopPropagation();            // ← prevents OrbitControls from starting orbit
-    const { x, y } = getClientXY(ev);
-    knobDown = { x, y };
-  }
-}, { capture: true });               // ← CRITICAL: capture phase runs before OrbitControls
-
-/* ── pointerup (window level — catches the release even after stopPropagation) ── */
 window.addEventListener('pointerup', ev=>{
-  if(turning){ controls.enabled = true; turning = false; }
   if(knobDown){
-    controls.enabled = true;         // always re-enable orbit on release
+    controls.enabled = true;
     const { x, y } = getClientXY(ev);
-    const moved = Math.hypot(x - knobDown.x, y - knobDown.y);
-    /* 10 px threshold — generous enough for a touch tap without false positives */
-    if(moved < 10){
+    if(Math.hypot(x - knobDown.x, y - knobDown.y) < 10){
       hmiSend('tap', { id: 'knob' });
-      pulseKnob();
-      glowKnob();  // trigger lighting effect
+      knobPressAnim = { t: 0 }; knobGlowAnim = { t: 0 };
     }
     knobDown = null;
   }
 });
 
-/* ── pointercancel — system interruption (incoming call, scroll takeover, etc.) ── */
-window.addEventListener('pointercancel', ()=>{
-  controls.enabled = true;
-  knobDown = null;
-  turning  = false;
-});
+  window.addEventListener('resize', ()=>{
+    const w = container.clientWidth, h = container.clientHeight;
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h); css3d.setSize(w, h);
+    // Re-apply current view with new scale
+    const activeBtn = document.querySelector('#views button.active');
+    if (activeBtn) setView(activeBtn.dataset.view, true);
+  });
 
-addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight); css3d.setSize(innerWidth, innerHeight);
-});
 (function tick(){
   if(camAnim){
     camAnim.t = Math.min(1, camAnim.t + 0.045);
-    const k = camAnim.t<.5 ? 2*camAnim.t*camAnim.t : 1-Math.pow(-2*camAnim.t+2,2)/2; // easeInOutQuad
+    const k = camAnim.t<.5 ? 2*camAnim.t*camAnim.t : 1-Math.pow(-2*camAnim.t+2,2)/2;
     camera.position.lerpVectors(camAnim.from, camAnim.to, k);
     if(camAnim.t >= 1) camAnim = null;
   }
   if(knobPressAnim && knobNode){
     knobPressAnim.t = Math.min(1, knobPressAnim.t + 0.09);
-    const s = 1 - 0.12*Math.sin(knobPressAnim.t*Math.PI);   // quick dip down, smooth return — no overshoot
+    const s = 1 - 0.12*Math.sin(knobPressAnim.t*Math.PI);
     knobNode.scale.copy(knobBaseScale).multiplyScalar(s);
     if(knobPressAnim.t >= 1){ knobNode.scale.copy(knobBaseScale); knobPressAnim = null; }
   }
-  
-  /* ── KNOB LIGHTING ANIMATION ── */
   if(knobGlowAnim && knobMeshes.length > 0){
     knobGlowAnim.t = Math.min(1, knobGlowAnim.t + 0.08);
-    // Smooth pulse: rise to peak at 0.5, then decay back to 0
-    const glowIntensity = Math.sin(knobGlowAnim.t * Math.PI) * 0.8;
-    knobMeshes.forEach(mesh => {
-      if(mesh.material){
-        // Set emissive color to a warm cyan/blue glow
-        mesh.material.emissive.setHex(0x00ccff);
-        mesh.material.emissiveIntensity = glowIntensity;
-        mesh.material.needsUpdate = true;
+    const glow = Math.sin(knobGlowAnim.t * Math.PI) * 0.8;
+    knobMeshes.forEach(m => {
+      if(m.material){
+        m.material.emissive.setHex(0x00ccff);
+        m.material.emissiveIntensity = glow;
+        m.material.needsUpdate = true;
       }
     });
-    if(knobGlowAnim.t >= 1){
-      // Reset emissive to off
-      knobMeshes.forEach(mesh => {
-        if(mesh.material){
-          mesh.material.emissive.setHex(0x000000);
-          mesh.material.emissiveIntensity = 0;
-          mesh.material.needsUpdate = true;
-        }
-      });
-      knobGlowAnim = null;
-    }
+    if(knobGlowAnim.t >= 1) knobGlowAnim = null;
   }
-  
-  /* ── OVERLAY OCCLUSION: CSS3D has no depth test against the WebGL body, so it
-     will otherwise render ON TOP of the model even when viewed from behind the
-     panel. Fade it out as the camera crosses to the back, so the GLB body reads
-     as covering the screen instead of a flat sticker floating through it. ── */
   if(overlayObj && overlayNormal){
     const toCam = camera.position.clone().sub(overlayObj.position).normalize();
-    const facing = toCam.dot(overlayNormal);           // 1 = dead-on front, 0 = edge-on, <0 = behind
-    const k = THREE.MathUtils.smoothstep(facing, -0.05, 0.15);  // smooth fade across the edge, not a hard cut
+    const facing = toCam.dot(overlayNormal);
+    const k = THREE.MathUtils.smoothstep(facing, -0.05, 0.15);
     overlayObj.element.style.opacity = k;
     overlayObj.element.style.pointerEvents = k > 0.5 ? 'auto' : 'none';
   }
-
   controls.update();
   renderer.render(scene, camera);
   css3d.render(scene, camera);
   requestAnimationFrame(tick);
 })();
-
-// APP-MODE LOCKDOWN: Disable context menu
 window.addEventListener('contextmenu', e => e.preventDefault());
 </script>
 </body>

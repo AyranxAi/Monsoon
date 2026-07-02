@@ -20,11 +20,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #1a1a1a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   font-family: system-ui, sans-serif;
 }
 
@@ -48,9 +47,8 @@ body {
   position: relative;
   background: #0c0c0c;
   border-radius: 8% 8% 2% 2% / 14% 14% 2% 2%;
-  /* Maintain exact panel ratio 1902.1:1084.5 */
-  width: min(95vw, calc(95vh * 1.754));
-  aspect-ratio: 1902.1 / 1084.5;
+  width: 100%;
+  height: 100%;
 }
 
 /* SCREEN — inset on all sides (NOT flush left), measured from reference */
@@ -339,7 +337,7 @@ body {
   cursor: default;
 }
 .dry-btn.skip { background: #2e3531; }       /* gray box (reference) */
-.dry-btn.nav-on { outline: 0.22cqw solid #f2f2f2 !important; outline-offset: 0.18cqw !important; }
+.dry-btn.nav-on { outline: 0.22cqw solid #f2f2f2; outline-offset: 0.18cqw; }
 
 /* Footer (same gray) */
 .dry-footer {
@@ -633,7 +631,7 @@ body {
   align-items: center;
   justify-content: center;
 }
-.dj-val.selected, .dj-val.nav-on { border-color: #f0f0f0; }
+.dj-val.selected { border-color: #f0f0f0; }
 .dj-num { color: var(--cyan); font-weight: 700; font-size: 4.4cqw; line-height: 1; }
 .dj-unit { color: #e0e0e0; font-size: 1.9cqw; margin-top: 0.38cqw; }
 .dj-num.off { color: #f0820a; }           /* Jet 2 frequency OFF */
@@ -792,8 +790,8 @@ body {
 
 /* ── KNOB NAVIGATION + VALUE EDITING ── */
 /* white selection outline (navigate mode) */
-.nav-on { outline: 2px solid #f2f2f2 !important; outline-offset: -2px !important; }
-.dash-o2.nav-on, .dash-gauge.nav-on { outline-offset: 3px !important; }
+.nav-on { outline: 2px solid #f2f2f2; outline-offset: -2px; }
+.dash-o2.nav-on, .dash-gauge.nav-on { outline-offset: 3px; }
 
 /* edit decorations — hidden until the field is being edited */
 .ev-up, .ev-down {
@@ -905,7 +903,7 @@ body {
   width: 1.4cqw;
   border-top: 0.13cqw solid #cfd3d0;
 }
-.set-row.nav-on { outline: 0.22cqw solid #f2f2f2 !important; outline-offset: 0.3cqw !important; }
+.set-row.nav-on { outline: 0.22cqw solid #f2f2f2; outline-offset: 0.3cqw; }
 
 /* right content pane */
 .set-content {
@@ -945,8 +943,8 @@ body {
 /* focus highlight on an option / action / value */
 .set-opt.nav-on, .lang-choice.nav-on, .clock-display.nav-on,
 .info-actions .opt-label.nav-on {
-  outline: 0.22cqw solid #f2f2f2 !important;
-  outline-offset: 0.3cqw !important;
+  outline: 0.22cqw solid #f2f2f2;
+  outline-offset: 0.3cqw;
 }
 .info-dot {
   display: inline-flex;
@@ -1018,7 +1016,7 @@ body {
   font-size: 2.3cqw;
   padding: 0.6cqw 2.6cqw;
 }
-.set-btn.nav-on { outline: 0.22cqw solid #f2f2f2 !important; outline-offset: -0.22cqw !important; }
+.set-btn.nav-on { outline: 0.22cqw solid #f2f2f2; outline-offset: -0.22cqw; }
 .set-save.hidden { visibility: hidden; }
 
 /* BUTTON BASE */
@@ -1180,7 +1178,7 @@ body {
   border: 0.18cqw solid transparent;
   cursor: pointer;
 }
-.pip-btn.sel { outline: 0.22cqw solid #f2f2f2 !important; outline-offset: 0.12cqw !important; }   /* knob selection */
+.pip-btn.sel { outline: 0.22cqw solid #f2f2f2; outline-offset: 0.12cqw; }   /* knob selection */
 
 /* click flash */
 .ring-btn::after {
@@ -1300,15 +1298,18 @@ body {
   user-select: none;
   cursor: pointer;
   opacity: 0.16;
-  transition: opacity 0.25s ease;
+  outline: 0.22cqw solid transparent;
+  outline-offset: 0.12cqw;
+  transition: opacity 0.25s ease, outline-color 0.3s ease;
   z-index: 6;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-#kt-left  { right: 23.19%; }
-#kt-right { right: -2.69%; }
+#kt-left  { right: 21.5%; }
+#kt-right { right: -1%; }
 #knob:hover ~ .kt-chev,
 .kt-chev:hover { opacity: 1; }
+.kt-chev.flash { outline-color: #f2f2f2 !important; }   /* click feedback */
 @media (hover: none) and (pointer: coarse) {
   .kt-chev { opacity: 0.72; width: 7%; min-width: 38px; font-size: 4vw; }
 }
@@ -1316,8 +1317,12 @@ body {
   /* BULLETPROOF TOUCH: remove browser-level highlights and outlines */
   * {
     -webkit-tap-highlight-color: transparent !important;
-    outline: none !important;
   }
+  /* Kill ONLY the browser's default focus ring. The app draws its own
+     selection highlight with `outline` (.nav-on, .kt-chev.flash), so a
+     universal `outline: none !important` (previous version) also wiped
+     out the white highlight that moves with the knob/chevrons. */
+  *:focus { outline: none; }
   .btn, .ring-btn, .ps-card, .dj-val, .d-box-header, .set-row, .st-continue, .pip-btn {
     cursor: pointer;
     touch-action: none; /* Prevent browser from intercepting touches for scrolling */
@@ -2576,6 +2581,14 @@ body {
     closePipPopup();
     setManual(false);
   }
+  pipBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      if (!onPipPopup) return;
+      pipIndex = i;
+      updatePipHighlight();
+      setTimeout(() => pipActivate(), 150);
+    });
+  });
 
   // ── ⑤ KNOB — physical rotary control: TURN to navigate, PRESS to confirm ──
   const knobEl = document.getElementById('knob');
@@ -2661,12 +2674,17 @@ body {
   });
 
   // Knob turn chevrons → same turn logic. Press = tapping the knob centre (its own handler).
+  function flashChev(el) {
+    clearTimeout(el._flashT);
+    el.classList.add('flash');
+    el._flashT = setTimeout(() => el.classList.remove('flash'), 180);
+  }
   (function () {
     const tap = (id, fn) => {
       const el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener('click', fn);
-      el.addEventListener('touchstart', e => { e.preventDefault(); fn(); }, { passive: false });
+      el.addEventListener('click', () => { flashChev(el); fn(); });
+      el.addEventListener('touchstart', e => { e.preventDefault(); flashChev(el); fn(); }, { passive: false });
     };
     tap('kt-left',  () => knobTurn(-1));
     tap('kt-right', () => knobTurn(1));
@@ -2691,20 +2709,6 @@ body {
   (function () {
     /* Handle all screen taps via a single pointerdown listener */
     document.addEventListener('pointerdown', function(e) {
-      // 0. PIP popup buttons (Continue / Stop ventilation)
-      if (onPipPopup) {
-        const pipBtn = e.target.closest('.pip-btn');
-        if (pipBtn) {
-          e.preventDefault();
-          const idx = pipBtns.indexOf(pipBtn);
-          if (idx >= 0) {
-            pipIndex = idx;
-            updatePipHighlight();
-            setTimeout(() => pipActivate(), 150);
-          }
-          return;
-        }
-      }
       // 1. Preset cards
       if (onPreset) {
         const card = e.target.closest('.ps-card');
@@ -2800,8 +2804,10 @@ body {
     font-size: 3.2vw !important;
     bottom: 11.249% !important;
   }
-  #kt-left  { right: 16.64% !important; }
-  #kt-right { right: -0.29% !important; }
+  /* chevrons nudged outward (same size) so the knob centre has clear space;
+     the knob-centre-wins interceptor still guarantees the middle presses. */
+  #kt-left  { right: 17.5% !important; }
+  #kt-right { right: -1.2% !important; }
 
   /* keep the flat buttons directly clickable in the overlay */
   .ring-btn { pointer-events: auto !important; -webkit-user-select: none; user-select: none;  pointer-events: auto !important; }
@@ -2813,8 +2819,12 @@ body {
   /* BULLETPROOF TOUCH: remove browser-level highlights and outlines */
   * {
     -webkit-tap-highlight-color: transparent !important;
-    outline: none !important;
   }
+  /* Kill ONLY the browser's default focus ring. The app draws its own
+     selection highlight with `outline` (.nav-on, .kt-chev.flash), so a
+     universal `outline: none !important` (previous version) also wiped
+     out the white highlight that moves with the knob/chevrons. */
+  *:focus { outline: none; }
   .btn, .ring-btn, .ps-card, .dj-val, .d-box-header, .set-row, .st-continue, .pip-btn {
     cursor: pointer;
     touch-action: none; /* Prevent browser from intercepting touches for scrolling */
@@ -2947,6 +2957,61 @@ body {
     console.log('[overlay] bgtap (no real control under tap) at', e.clientX, e.clientY);
     window.parent.postMessage({ ch: 'ms4', act: 'bgtap', x: e.clientX, y: e.clientY }, '*');
   });
+})();
+</script>
+
+<script id="knob-center-wins">
+/* ═════════════════════════════════════════════════════
+   KNOB-CENTRE-WINS
+
+   In portrait the ‹ › chevrons can overlap the 3D knob's silhouette, so a
+   tap meant for the knob lands on a chevron and is consumed as a TURN.
+
+   This capture-phase interceptor fixes that: if a tap falls inside the knob's
+   circle, it is forwarded straight to the parent as a `bgtap` (→ 3D raycast →
+   knob press, same path as an empty-space tap) and the chevron's own handler
+   is blocked via stopPropagation. Taps OUTSIDE the circle are left alone, so
+   the outer chevron edges still turn normally.
+
+   The knob circle is derived at runtime from the two chevrons' live rects —
+   they are positioned on the real 3D knob's centre, so this tracks it exactly
+   at any size/orientation with no hard-coded pixels. Only active in overlay
+   (3D) mode, detected by #knob being display:none (it is the live button in
+   the standalone flat simulator, where this must stay out of the way).
+   ═════════════════════════════════════════════════════ */
+(function () {
+  var left  = document.getElementById('kt-left');
+  var right = document.getElementById('kt-right');
+  var knob  = document.getElementById('knob');
+  if (!left || !right || !knob) return;
+
+  function knobCircle() {
+    var a = left.getBoundingClientRect(), b = right.getBoundingClientRect();
+    if (!a.width || !b.width) return null;
+    var ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    var bx = b.left + b.width / 2, by = b.top + b.height / 2;
+    return {
+      cx: (ax + bx) / 2,
+      cy: (ay + by) / 2,
+      rad: 0.42 * Math.hypot(bx - ax, by - ay)   // ~knob radius; leaves outer chevron glyphs tappable
+    };
+  }
+  function point(e) {
+    if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    if (e.touches && e.touches[0])               return { x: e.touches[0].clientX,        y: e.touches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+  function intercept(e) {
+    if (getComputedStyle(knob).display !== 'none') return;   // standalone flat mode → knob is real, stay out
+    var c = knobCircle(); if (!c) return;
+    var p = point(e);
+    if (Math.hypot(p.x - c.cx, p.y - c.cy) > c.rad) return;   // outside knob → let chevron/panel handle it
+    e.stopPropagation();
+    if (e.cancelable) e.preventDefault();
+    window.parent.postMessage({ ch: 'ms4', act: 'bgtap', x: p.x, y: p.y }, '*');
+  }
+  document.addEventListener('touchstart', intercept, { capture: true, passive: false });
+  document.addEventListener('click',      intercept, { capture: true });
 })();
 </script>
 
