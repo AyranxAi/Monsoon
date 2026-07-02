@@ -12,7 +12,12 @@
   #app{position:fixed;inset:0;display:flex;flex-direction:column;}
   
   /* Layout: 3D view on top, controls on bottom */
-  #webgl-container{position:relative;flex:1;z-index:1;overflow:hidden;}
+  /* Clean studio sweep: neutral gradient, lighter where the product sits,
+     softly darker toward the edges/bottom so the white body has contrast and
+     doesn't blend into the background. (studio.png is kept only as the IBL
+     reflection/light source, not as a flat 2D backdrop behind the 3D.) */
+  #webgl-container{position:relative;flex:1;z-index:1;overflow:hidden;
+    background:radial-gradient(135% 130% at 50% 30%, #eff2f4 0%, #d2d8dc 55%, #b4bdc2 100%);}
   #webgl{position:absolute;inset:0;touch-action:none;}
   #css3d{position:absolute;inset:0;z-index:2;pointer-events:none; touch-action:none;}
   #css3d iframe{border:0;background:transparent;pointer-events:auto;
@@ -126,22 +131,37 @@ const log = (...a)=>console.log('[djtwin]', ...a);
 const container = document.getElementById('webgl-container');
 
 /* ── WebGL renderer ── */
-const renderer = new THREE.WebGLRenderer({ antialias:true });
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.LinearToneMapping;   // vivid like the Blender "Standard" look; ACES would desaturate the teal
+renderer.toneMappingExposure = 0.9;
+renderer.setClearAlpha(0);                          // let the studio.png CSS backdrop show through
 renderer.domElement.style.touchAction = 'none';
 document.getElementById('webgl').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xe9ecec);
+scene.background = null;   // studio.png shows through as the CSS backdrop behind the model
 
 const camera = new THREE.PerspectiveCamera(34, container.clientWidth/container.clientHeight, 0.01, 100);
 
-/* ── Lighting ── */
-scene.add(new THREE.HemisphereLight(0xffffff, 0x97a1a3, 0.95));
-const key = new THREE.DirectionalLight(0xffffff, 0.55); key.position.set(0.5, 1.2, 0.9); scene.add(key);
-const fill= new THREE.DirectionalLight(0xffffff, 0.22); fill.position.set(-0.7, 0.5, -0.4); scene.add(fill);
+/* ── Lighting: IBL from the white studio (studio.png) ──
+   The bright room is baked into an environment map so the glossy white body
+   and teal knob reflect it and read as shiny "new tech" instead of flat gray.
+   Direct lights just add a key highlight + a bit of shape. */
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+new THREE.TextureLoader().load('studio.png', (tex)=>{
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  scene.environment = pmrem.fromEquirectangular(tex).texture;
+  tex.dispose(); pmrem.dispose();
+  log('studio environment ready');
+}, undefined, (e)=> log('studio env load failed', e));
+scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa4a6, 0.35));
+const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(0.5, 1.2, 0.9); scene.add(key);
+const fill= new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-0.7, 0.5, -0.4); scene.add(fill);
 
 /* ── Controls ── */
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -170,12 +190,15 @@ let target = new THREE.Vector3(0, 0.20, 0.12);
   };
 
   const VIEWS = {
+    hero:  [   0, 70, 0.98 ],   // wide default: whole unit incl. feet; unlabeled (no button highlighted)
     front: [   0, 66, 0.62 ],
     tq:    [ -32, 60, 0.66 ],
     ports: [   6, 84, 0.50 ],
   };
 let camAnim = null;
+let currentViewName = 'hero';
   function setView(name, instant){
+    currentViewName = name;
     const v = VIEWS[name] || VIEWS.front;
     const a = THREE.MathUtils.degToRad(v[0]), p = THREE.MathUtils.degToRad(v[1]), d = v[2] * getScale();
     const dest = new THREE.Vector3(
@@ -206,7 +229,19 @@ new GLTFLoader().load(GLB, (gltf)=>{
   const named = {};
   model.traverse(o=>{
     if(o.name) named[o.name] = o;
-    if(o.isMesh && o.material){ o.material.envMapIntensity = 0.4; o.material.needsUpdate = true; }
+    if(o.isMesh && o.material){
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach(m=>{
+        const c = m.color;
+        const lum = c ? (0.2126*c.r + 0.7152*c.g + 0.0722*c.b) : 1;
+        // Dark surfaces (control panel, screen, feet) ignore the bright studio
+        // env so they stay a rich charcoal instead of washing out to grey.
+        // Light surfaces (white body, teal knob, colored rings) keep the full
+        // reflection so they read glossy/new.
+        m.envMapIntensity = (lum < 0.12) ? 0.05 : 0.7;
+        m.needsUpdate = true;
+      });
+    }
   });
   scene.add(model);
 
@@ -215,6 +250,8 @@ new GLTFLoader().load(GLB, (gltf)=>{
   const box = new THREE.Box3().setFromObject(model);
   const center = box.getCenter(new THREE.Vector3());
   target.copy(center); controls.target.copy(center);
+
+  /* logo is now baked into the GLB (LBL_logo); no HTML decal needed */
 
   /* ── Overlay Placement ── */
   const anchor = named['SCREEN_anchor'];
@@ -250,11 +287,15 @@ new GLTFLoader().load(GLB, (gltf)=>{
         o.userData.kind='knob';
         pickables.push(o);
         knobMeshes.push(o);
+        // The knob sits in the dark panel, so a full studio reflection makes it
+        // glow unnaturally. Dial its env reflection down so it's lit mostly by
+        // the key light -> natural top-lit gradient with a darker underside.
+        if(o.material){ o.material.envMapIntensity = 0.22; o.material.needsUpdate = true; }
       }
     });
   }
 
-  setView('front', true);
+  setView('hero', true);
  } catch(err) { log('SETUP ERROR', err); }
 }, undefined, (err)=> log('LOAD ERROR', err));
 
@@ -326,9 +367,8 @@ window.addEventListener('pointerup', ev=>{
     const w = container.clientWidth, h = container.clientHeight;
     camera.aspect = w/h; camera.updateProjectionMatrix();
     renderer.setSize(w, h); css3d.setSize(w, h);
-    // Re-apply current view with new scale
-    const activeBtn = document.querySelector('#views button.active');
-    if (activeBtn) setView(activeBtn.dataset.view, true);
+    // Re-apply current view with new scale (works for the unlabeled hero view too)
+    setView(currentViewName, true);
   });
 
 (function tick(){
